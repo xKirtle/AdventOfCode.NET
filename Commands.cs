@@ -16,15 +16,13 @@ internal class Commands
     )
     {
         Environment.SetEnvironmentVariable("AOC_SESSION_COOKIE", session);
-        
-        // TODO: Store these in an config file
         Environment.SetEnvironmentVariable("AOC_GIT_REMOTE_NAME", remoteName);
         Environment.SetEnvironmentVariable("AOC_GIT_DEFAULT_BRANCH", defaultBranch);
     }
     
     [Command]
     public static Task Setup(DateParameters date, [Option("no-git")] bool noGit = false) {
-        return AOCUtils.SetupProblem(date.Year, date.Day, !noGit);
+        return noGit ? AOCUtils.SetupProblem(date.Year, date.Day) : AOCUtils.SetupProblemWithGit(date.Year, date.Day);
     }
 
     [Command]

@@ -2,10 +2,11 @@
 using System.Net.Http;
 using System.Net;
 using System.Diagnostics;
+using System.Drawing;
 using AdventOfCode.NET.Model;
 
 [DebuggerStepThrough]
-public class AOCHttpClient
+internal class AOCHttpClient
 {
     private static readonly HttpClient Client;
     private static Uri AOCBaseAddress => new Uri("https://adventofcode.com/");
@@ -33,9 +34,25 @@ public class AOCHttpClient
         return sessionCookie;
     }
 
-    internal static Task<Problem> DownloadProblem(int year, int day) {
+    public static async Task<Problem> DownloadProblem(int year, int day) {
+        var requestUri = new Uri(AOCBaseAddress, $"/{year}/day/{day}");
+        Console.WriteLine("Updating " + requestUri, Color.Green);
+        var problem = await Client.GetAsync(requestUri);
         
+        if (!problem.IsSuccessStatusCode) {
+            Console.WriteLine($"Error downloading problem: {problem.StatusCode} {problem.ReasonPhrase}", Color.Red);
+            return null;
+        }
+
+        var input = await Client.GetAsync(requestUri + "/input");
         
-        return (Task<Problem>) Task.CompletedTask;
+        if (!input.IsSuccessStatusCode) {
+            Console.WriteLine($"Error downloading input: {input.StatusCode} {input.ReasonPhrase}", Color.Red);
+            return null;
+        }
+        
+        // TODO: Parse problem description
+        
+        return await (Task<Problem>) Task.CompletedTask;
     }
 }
