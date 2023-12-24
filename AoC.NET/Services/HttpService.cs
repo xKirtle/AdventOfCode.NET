@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Spectre.Console;
 
 namespace AoC.NET.Services;
 
@@ -30,11 +31,11 @@ public class HttpService : IHttpService
     
     public async Task<object> FetchProblem(int year, int day) {
         var requestUri = new Uri(_aocBaseAddress + $"/{year}/day/{day}");
-        // Console.WriteLine("Updating " + requestUri, Color.Green);
+        AnsiConsole.MarkupLine($"[green]Updating {requestUri}[/]");
         var problem = await _client.GetAsync(requestUri);
         
         if (!problem.IsSuccessStatusCode) {
-            // Console.WriteLine($"Error downloading problem: {problem.StatusCode} {problem.ReasonPhrase}", Color.Red);
+            AnsiConsole.MarkupLine($"[red]Error downloading problem: {{problem.StatusCode}} {{problem.ReasonPhrase}}[/]");
             return null;
         }
 

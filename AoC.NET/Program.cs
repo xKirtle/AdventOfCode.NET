@@ -10,7 +10,7 @@ var serviceProvider = serviceCollection.BuildServiceProvider();
 
 var app = new CommandApp();
 app.Configure(config => {
-    config.AddCommand<SetupCommand>("setup")
+    config.AddCommand<InitCommand>("setup")
         .WithDescription("Setup a new problem")
         .WithExample("setup", "2020", "15")
         .WithExample("setup", "2020", "15", "--no-git", "true");
