@@ -1,7 +1,7 @@
-﻿namespace AdventOfCode.NET.Model;
+﻿namespace AoC.NET.Model;
 
 public interface ISolver
 {
-    object PartOne(string input);
-    object PartTwo(string input);
+    public object PartOne(string input);
+    public object PartTwo(string input);
 }
