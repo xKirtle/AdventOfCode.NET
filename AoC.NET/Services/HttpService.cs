@@ -15,7 +15,7 @@ public class HttpService : IHttpService
     private readonly Uri _aocBaseAddress;
         
     public HttpService() {
-        _aocBaseAddress = new Uri("https://adventofcode.com/");
+        _aocBaseAddress = new Uri("https://adventofcode.com");
         var handler = new HttpClientHandler {
             CookieContainer = new CookieContainer()
         };
@@ -30,28 +30,24 @@ public class HttpService : IHttpService
     }
     
     public async Task<string> FetchProblem(int year, int day) {
-        var requestUri = new Uri(_aocBaseAddress + $"/{year}/day/{day}");
-        AnsiConsole.MarkupLine($"[green]Updating {requestUri}[/]");
+        return await FetchContentAsync($"{year}/day/{day}");
+    }
+
+    public async Task<string> FetchProblemInput(int year, int day) {
+        return await FetchContentAsync($"{year}/day/{day}/input");
+    }
+
+    private async Task<string> FetchContentAsync(string path) {
+        var requestUri = new Uri(_aocBaseAddress + path);
+        AnsiConsole.MarkupLine($"[green]Fetching from {requestUri}[/]");
         var responseMessage = await _client.GetAsync(requestUri);
-        
+
         if (!responseMessage.IsSuccessStatusCode) {
-            AnsiConsole.MarkupLine($"[red]Error downloading problem: {{problem.StatusCode}} {{problem.ReasonPhrase}}[/]");
+            AnsiConsole.MarkupLine($"[red]Error downloading content: {responseMessage.StatusCode} {responseMessage.ReasonPhrase}[/]");
             return null;
         }
 
         return await responseMessage.Content.ReadAsStringAsync();
-    }
-    public async Task<string> FetchProblemInput(int year, int day) {
-        // TODO: Fetch problem input and parse response into a string
-        
-        // var input = await _client.GetAsync(requestUri + "/input");
-        //
-        // if (!input.IsSuccessStatusCode) {
-        //     // Console.WriteLine($"Error downloading input: {input.StatusCode} {input.ReasonPhrase}", Color.Red);
-        //     return null;
-        // }
-        
-        return await (Task<string>) Task.CompletedTask;
     }
 
     private static string GetSessionCookie() {

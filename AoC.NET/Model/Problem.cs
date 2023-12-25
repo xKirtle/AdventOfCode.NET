@@ -7,5 +7,5 @@ internal class Problem
     public int Day { get; set; }
     public int Year { get; set; }
     public string Input { get; set; }
-    public string[] Answers { get; set; }
+    public List<(string, string)> Examples { get; set; } = new List<(string, string)>();
 }

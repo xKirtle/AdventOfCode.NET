@@ -7,6 +7,7 @@ using Spectre.Console.Cli;
 var serviceCollection = new ServiceCollection();
 serviceCollection.AddSingleton<IHttpService, HttpService>();
 serviceCollection.AddSingleton<IProblemService, ProblemService>();
+serviceCollection.AddSingleton<ITestRunnerService, TestRunnerService>();
 
 var registrar = new TypeRegistrar(serviceCollection);
 var app = new CommandApp(registrar);
