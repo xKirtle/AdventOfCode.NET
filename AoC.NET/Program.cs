@@ -1,18 +1,21 @@
 ﻿using AoC.NET.Commands;
+using AoC.NET.DependencyInjection;
 using AoC.NET.Services;
-using Spectre.Console;
-using Spectre.Console.Cli;
 using Microsoft.Extensions.DependencyInjection;
+using Spectre.Console.Cli;
 
 var serviceCollection = new ServiceCollection();
 serviceCollection.AddSingleton<IHttpService, HttpService>();
-var serviceProvider = serviceCollection.BuildServiceProvider();
+serviceCollection.AddSingleton<IProblemService, ProblemService>();
 
-var app = new CommandApp();
+var registrar = new TypeRegistrar(serviceCollection);
+var app = new CommandApp(registrar);
+
 app.Configure(config => {
-    config.AddCommand<InitCommand>("setup")
-        .WithDescription("Setup a new problem")
-        .WithExample("setup", "2020", "15")
-        .WithExample("setup", "2020", "15", "--no-git", "true");
+    config.AddCommand<InitCommand>("init")
+        .WithDescription("Initialize environment variables.");
+
+    config.AddCommand<SetupCommand>("setup")
+        .WithDescription("Setup a new problem.");
 });
 return app.Run(args);

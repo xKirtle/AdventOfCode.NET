@@ -5,7 +5,7 @@ namespace AoC.NET.Services;
 
 public interface IHttpService
 {
-    Task<object> FetchProblem(int year, int day);
+    Task<string> FetchProblem(int year, int day);
     Task<string> FetchProblemInput(int year, int day);
 }
 
@@ -29,21 +29,17 @@ public class HttpService : IHttpService
         handler.CookieContainer.Add(_aocBaseAddress, new Cookie("session", aocSessionToken));
     }
     
-    public async Task<object> FetchProblem(int year, int day) {
+    public async Task<string> FetchProblem(int year, int day) {
         var requestUri = new Uri(_aocBaseAddress + $"/{year}/day/{day}");
         AnsiConsole.MarkupLine($"[green]Updating {requestUri}[/]");
-        var problem = await _client.GetAsync(requestUri);
+        var responseMessage = await _client.GetAsync(requestUri);
         
-        if (!problem.IsSuccessStatusCode) {
+        if (!responseMessage.IsSuccessStatusCode) {
             AnsiConsole.MarkupLine($"[red]Error downloading problem: {{problem.StatusCode}} {{problem.ReasonPhrase}}[/]");
             return null;
         }
 
-        var input = await FetchProblemInput(year, day);
-        
-        // TODO: Parse problem description
-        
-        return await (Task<object>) Task.CompletedTask;
+        return await responseMessage.Content.ReadAsStringAsync();
     }
     public async Task<string> FetchProblemInput(int year, int day) {
         // TODO: Fetch problem input and parse response into a string
