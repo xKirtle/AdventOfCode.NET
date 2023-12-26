@@ -122,9 +122,12 @@ internal class ProblemService : IProblemService
     }
 
     private async Task CreateProblemTests(Problem problem) {
+        // Making sure the test folder exists
+        GetOrCreateProblemPath(problem.Year, problem.Day, includeTest: true);
+        
         for (int i = 0; i < problem.Examples.Count; i++) {
             var (input, output) = problem.Examples[i];
-            await _solverService.CreateTest(problem.Year, problem.Day, $"test{i + 1}.aoc", input, output);
+            await _solverService.CreateTest(problem.Year, problem.Day, exampleNumber: i, input, output);
         }
     }
 
@@ -133,7 +136,7 @@ internal class ProblemService : IProblemService
 
 namespace AoC.NET.Problems.Y{problem.Year}.Day{problem.Day:00};
 
-[AocSolution({problem.Year}, {problem.Day})]
+[AoCSolution({problem.Year}, {problem.Day})]
 public class Solution : ISolver
 {{
     public object PartOne(string input) {{

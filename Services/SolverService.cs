@@ -6,16 +6,18 @@ namespace AoC.NET.Services;
 
 internal interface ISolverService
 {
-    Task CreateTest(int year, int day, string fileNameWithExtension, string input, string output);
+    Task CreateTest(int year, int day, int exampleNumber, string input, string output);
     Task SolveProblem(int year, int day);
 }
 
 internal class SolverService : ISolverService
 {
-    public async Task CreateTest(int year, int day, string fileNameWithExtension, string input, string output) {
-        var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), fileNameWithExtension);
+    public async Task CreateTest(int year, int day, int exampleNumber, string input, string output) {
+        var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), $"test{exampleNumber}.aoc");
         
         var sb = new StringBuilder()
+            .AppendLine($"Part: {exampleNumber + 1}")
+            .AppendLine()
             .AppendLine("Input:")
             .AppendLine(input.Trim())
             .AppendLine()
@@ -25,6 +27,7 @@ internal class SolverService : ISolverService
         AnsiConsole.MarkupLine($"[green]Writing {filePath}[/]");
         await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
     }
+    
     public async Task SolveProblem(int year, int day) {
         var solutionType = FindSolutionType(year, day);
         var solution = (ISolver)Activator.CreateInstance(solutionType);
@@ -32,26 +35,35 @@ internal class SolverService : ISolverService
         var testDirectory = GetProblemPath(year, day, includeTest: true);
 
         foreach (var file in Directory.GetFiles(testDirectory, "*.aoc")) {
-            var (input, output) = await ParseTestFile(year, day, Path.GetFileName(file));
-            var result = solution.PartOne(input);
+            var (problemPart, input, output) = await ParseTestFile(year, day, Path.GetFileName(file));
+
+            if (problemPart != 1 && problemPart != 2)
+                throw new InvalidOperationException($"Invalid problem part {problemPart}.");
             
+            var result = problemPart == 1 ? solution.PartOne(input) : solution.PartTwo(input);
+            
+            // TODO: Handle wrong answers without throwing an exception... Properly format the output?
             if (result.ToString() != output)
-                throw new InvalidOperationException($"Test failed for {file}. Expected {output}, got {result}.");
+                throw new InvalidOperationException($"Test failed for {Path.GetFileName(file)}. Expected {output}, got {result}.");
+            
+            AnsiConsole.MarkupLine($"[green]Test passed for {Path.GetFileName(file)}[/]");
         }
-        
-        // Invoke solution.PartOne and solution.PartTwo here...
     }
 
-    private async Task<(string input, string output)> ParseTestFile(int year, int day, string fileNameWithExtension) {
+    private async Task<(int problemPart, string input, string output)> ParseTestFile(int year, int day, string fileNameWithExtension) {
         var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), fileNameWithExtension);
         
         string fileContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
-        string[] parts = fileContent.Split(new[] { "Input:", "Expected Output:" }, StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = fileContent.Split(new[] { "Part:", "Input:", "Expected Output:" }, StringSplitOptions.RemoveEmptyEntries);
 
-        if (parts.Length != 2)
-            throw new InvalidOperationException("Test file format is incorrect.");
+        var problemPart = parts[0].Trim();
+        var input = parts[1].Trim();
+        var output = parts[2].Trim();
+        
+        if (parts.Length != 3 || !int.TryParse(problemPart, out int problemPartNumber) || string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(output))
+            throw new InvalidOperationException("Test file format is incorrect or input/output is missing.");
 
-        return (parts[0].Trim(), parts[1].Trim());
+        return (problemPartNumber, input, output);
     }
     
     private Type FindSolutionType(int year, int day) {
