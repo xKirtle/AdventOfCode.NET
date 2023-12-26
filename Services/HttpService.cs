@@ -3,13 +3,13 @@ using Spectre.Console;
 
 namespace AoC.NET.Services;
 
-public interface IHttpService
+internal interface IHttpService
 {
     Task<string> FetchProblem(int year, int day);
     Task<string> FetchProblemInput(int year, int day);
 }
 
-public class HttpService : IHttpService
+internal class HttpService : IHttpService
 {
     private readonly HttpClient _client;
     private readonly Uri _aocBaseAddress;

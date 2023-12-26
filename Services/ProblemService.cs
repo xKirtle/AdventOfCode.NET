@@ -13,16 +13,17 @@ internal interface IProblemService
     Task<Problem> FetchAndParseProblem(int year, int day);
     Task CreateProblemFiles(Problem problem);
     void SetupGitForProblem(int year, int day);
+    string GetOrCreateProblemPath(int year, int day, bool includeTest = false);
 }
 
 internal class ProblemService : IProblemService
 {
     private readonly IHttpService _httpService;
-    private readonly ITestRunnerService _testRunnerService;
+    private readonly ISolverService _solverService;
     
-    public ProblemService(IHttpService httpService, ITestRunnerService testRunnerService) {
+    public ProblemService(IHttpService httpService, ISolverService solverService) {
         _httpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
-        _testRunnerService = testRunnerService ?? throw new ArgumentNullException(nameof(testRunnerService));
+        _solverService = solverService ?? throw new ArgumentNullException(nameof(solverService));
     }
 
     public async Task<Problem> FetchAndParseProblem(int year, int day) {
@@ -89,20 +90,12 @@ internal class ProblemService : IProblemService
             OpenJetBrainsRider([$"{year}/Day{day:00}/README.md", $"{year}/Day{day:00}/Solution.cs", $"{year}/Day{day:00}/test/test1.aoc"]);
         }
         else {
-            AnsiConsole.MarkupLine($"[yellow]Branch {newProblemBranch.FriendlyName} already exists. Skipping.[/]");
+            AnsiConsole.MarkupLine($"[yellow]Branch {newProblemBranch.FriendlyName} already exists. Skipping git setup.[/]");
         }
     }
     
-    private static void OpenJetBrainsRider(ReadOnlySpan<string> args) 
-    {
-        string riderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Rider\bin\rider64.exe");
-        string arguments = string.Join(" ", args.ToArray());
-
-        Process.Start(riderPath, arguments).WaitForExit();
-    }
-
-    private string GetOrCreateProblemPath(Problem problem, bool includeTest = false) {
-        var folder = Path.Combine(problem.Year.ToString(), $"Day{problem.Day:00}");
+    public string GetOrCreateProblemPath(int year, int day, bool includeTest = false) {
+        var folder = Path.Combine(year.ToString(), $"Day{day:00}");
 
         if (includeTest)
             folder = Path.Combine(folder, "test");
@@ -114,9 +107,17 @@ internal class ProblemService : IProblemService
 
         return folder;
     }
+    
+    private static void OpenJetBrainsRider(ReadOnlySpan<string> args) 
+    {
+        string riderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Rider\bin\rider64.exe");
+        string arguments = string.Join(" ", args.ToArray());
+
+        Process.Start(riderPath, arguments).WaitForExit();
+    }
 
     private async Task CreateFileAsync(Problem problem, string filename, string content) {
-        var file = Path.Combine(GetOrCreateProblemPath(problem), filename);
+        var file = Path.Combine(GetOrCreateProblemPath(problem.Year, problem.Day), filename);
         AnsiConsole.MarkupLine($"[green]Writing {file}[/]");
         await File.WriteAllTextAsync(file, content, Encoding.UTF8);
     }
@@ -124,8 +125,7 @@ internal class ProblemService : IProblemService
     private async Task CreateProblemTests(Problem problem) {
         for (int i = 0; i < problem.Examples.Count; i++) {
             var (input, output) = problem.Examples[i];
-            var filePath = Path.Combine(GetOrCreateProblemPath(problem, includeTest: true), $"test{i + 1}.aoc");
-            await _testRunnerService.CreateTest(input, output, filePath);
+            await _solverService.CreateTest(problem.Year, problem.Day, $"test{i + 1}.aoc", input, output);
         }
     }
 
@@ -134,6 +134,7 @@ internal class ProblemService : IProblemService
 
 namespace AoC.NET.Problems.Y{problem.Year}.Day{problem.Day:00};
 
+[AocSolution({problem.Year}, {problem.Day})]
 public class Solution : ISolver
 {{
     public object PartOne(string input) {{
@@ -150,7 +151,7 @@ public class Solution : ISolver
     // TODO: Maybe don't hardcode these and simply rely on the user's environment variables?
     private static List<string> GetGitRemoteNames() {
         var remoteName = Environment.GetEnvironmentVariable("AOC_GIT_REMOTE_NAME");
-        return new [] { remoteName, "origin", "upstream" }
+        return new List<string> { remoteName, "origin", "upstream" }
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct()
             .ToList();
@@ -158,7 +159,7 @@ public class Solution : ISolver
     
     private static List<string> GetGitDefaultBranches() {
         var defaultBranch = Environment.GetEnvironmentVariable("AOC_GIT_DEFAULT_BRANCH");
-        return new [] { defaultBranch, "main", "master" }
+        return new List<string> { defaultBranch, "main", "master" }
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct()
             .ToList();
