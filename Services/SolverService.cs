@@ -7,11 +7,18 @@ namespace AoC.NET.Services;
 internal interface ISolverService
 {
     Task CreateTest(int year, int day, int exampleNumber, string input, string output);
+    Task SolveProblemTests(int year, int day);
     Task SolveProblem(int year, int day);
 }
 
 internal class SolverService : ISolverService
 {
+    private readonly IHttpService _httpService;
+    
+    public SolverService(IHttpService httpService) {
+        _httpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
+    }
+    
     public async Task CreateTest(int year, int day, int exampleNumber, string input, string output) {
         var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), $"test{exampleNumber}.aoc");
         
@@ -28,10 +35,8 @@ internal class SolverService : ISolverService
         await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
     }
     
-    public async Task SolveProblem(int year, int day) {
-        var solutionType = FindSolutionType(year, day);
-        var solution = (ISolver)Activator.CreateInstance(solutionType);
-        
+    public async Task SolveProblemTests(int year, int day) {
+        var solution = GetSolutionInstance(year, day);
         var testDirectory = GetProblemPath(year, day, includeTest: true);
 
         foreach (var file in Directory.GetFiles(testDirectory, "*.aoc")) {
@@ -48,6 +53,15 @@ internal class SolverService : ISolverService
             
             AnsiConsole.MarkupLine($"[green]Test passed for {Path.GetFileName(file)}[/]");
         }
+    }
+    
+    public async Task SolveProblem(int year, int day) {
+        var solution = GetSolutionInstance(year, day);
+        var input = await File.ReadAllTextAsync(Path.Combine(GetProblemPath(year, day), "input.aoc"), Encoding.UTF8);
+        var level = await _httpService.FetchProblemLevel(year, day);
+        var solutionResult = level == "1" ? solution.PartOne(input) : solution.PartTwo(input);
+        
+        await _httpService.SubmitSolution(year, day, level, solutionResult.ToString());
     }
 
     private async Task<(int problemPart, string input, string output)> ParseTestFile(int year, int day, string fileNameWithExtension) {
@@ -66,7 +80,8 @@ internal class SolverService : ISolverService
         return (problemPartNumber, input, output);
     }
     
-    private Type FindSolutionType(int year, int day) {
+    
+    private ISolver GetSolutionInstance(int year, int day) {
         Type foundType = null;
         
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
@@ -88,7 +103,7 @@ internal class SolverService : ISolverService
         if (foundType == null)
             throw new InvalidOperationException($"No solution class found for Year {year}, Day {day}.");
         
-        return foundType;
+        return (ISolver)Activator.CreateInstance(foundType);
     }
     
     private string GetProblemPath(int year, int day, bool includeTest = false) {
