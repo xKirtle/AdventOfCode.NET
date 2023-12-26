@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace AoC.NET.Commands;
 
-internal class SetupCommand : Command<SetupCommand.Settings>
+internal sealed class SetupCommand : Command<SetupCommand.Settings>
 {
     private readonly IProblemService _problemService;
     

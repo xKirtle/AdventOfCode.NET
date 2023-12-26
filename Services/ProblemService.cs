@@ -13,7 +13,6 @@ internal interface IProblemService
     Task<Problem> FetchAndParseProblem(int year, int day);
     Task CreateProblemFiles(Problem problem);
     void SetupGitForProblem(int year, int day);
-    string GetOrCreateProblemPath(int year, int day, bool includeTest = false);
 }
 
 internal class ProblemService : IProblemService
@@ -94,7 +93,7 @@ internal class ProblemService : IProblemService
         }
     }
     
-    public string GetOrCreateProblemPath(int year, int day, bool includeTest = false) {
+    private string GetOrCreateProblemPath(int year, int day, bool includeTest = false) {
         var folder = Path.Combine(year.ToString(), $"Day{day:00}");
 
         if (includeTest)
@@ -148,20 +147,21 @@ public class Solution : ISolver
 ";
     }
     
-    // TODO: Maybe don't hardcode these and simply rely on the user's environment variables?
     private static List<string> GetGitRemoteNames() {
         var remoteName = Environment.GetEnvironmentVariable("AOC_GIT_REMOTE_NAME");
-        return new List<string> { remoteName, "origin", "upstream" }
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct()
-            .ToList();
+
+        if (!string.IsNullOrEmpty(remoteName))
+            return new List<string> { remoteName };
+
+        return new List<string> { "origin", "upstream" };
     }
     
     private static List<string> GetGitDefaultBranches() {
         var defaultBranch = Environment.GetEnvironmentVariable("AOC_GIT_DEFAULT_BRANCH");
-        return new List<string> { defaultBranch, "main", "master" }
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct()
-            .ToList();
+        
+        if (!string.IsNullOrEmpty(defaultBranch))
+            return new List<string> { defaultBranch };
+
+        return new List<string> { "main", "master" };
     }
 }

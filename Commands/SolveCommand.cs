@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace AoC.NET.Commands;
 
-internal class SolveCommand : Command<SolveCommand.Settings>
+internal sealed class SolveCommand : Command<SolveCommand.Settings>
 {
     private readonly ISolverService _solverService;
     
@@ -14,7 +14,7 @@ internal class SolveCommand : Command<SolveCommand.Settings>
     }
 
     public override int Execute(CommandContext context, Settings settings) {
-        
+        _solverService.SolveProblem(settings.Year, settings.Day).GetAwaiter().GetResult();
         
         return 0;
     }

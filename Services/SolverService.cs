@@ -12,14 +12,8 @@ internal interface ISolverService
 
 internal class SolverService : ISolverService
 {
-    private readonly IProblemService _problemService;
-
-    public SolverService(IProblemService problemService) {
-        _problemService = problemService ?? throw new ArgumentNullException(nameof(problemService));
-    }
-    
     public async Task CreateTest(int year, int day, string fileNameWithExtension, string input, string output) {
-        var filePath = Path.Combine(_problemService.GetOrCreateProblemPath(year, day, includeTest: true), fileNameWithExtension);
+        var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), fileNameWithExtension);
         
         var sb = new StringBuilder()
             .AppendLine("Input:")
@@ -33,14 +27,23 @@ internal class SolverService : ISolverService
     }
     public async Task SolveProblem(int year, int day) {
         var solutionType = FindSolutionType(year, day);
-
         var solution = (ISolver)Activator.CreateInstance(solutionType);
+        
+        var testDirectory = GetProblemPath(year, day, includeTest: true);
+
+        foreach (var file in Directory.GetFiles(testDirectory, "*.aoc")) {
+            var (input, output) = await ParseTestFile(year, day, Path.GetFileName(file));
+            var result = solution.PartOne(input);
+            
+            if (result.ToString() != output)
+                throw new InvalidOperationException($"Test failed for {file}. Expected {output}, got {result}.");
+        }
         
         // Invoke solution.PartOne and solution.PartTwo here...
     }
 
     private async Task<(string input, string output)> ParseTestFile(int year, int day, string fileNameWithExtension) {
-        var filePath = Path.Combine(_problemService.GetOrCreateProblemPath(year, day, includeTest: true), fileNameWithExtension);
+        var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), fileNameWithExtension);
         
         string fileContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
         string[] parts = fileContent.Split(new[] { "Input:", "Expected Output:" }, StringSplitOptions.RemoveEmptyEntries);
@@ -74,5 +77,14 @@ internal class SolverService : ISolverService
             throw new InvalidOperationException($"No solution class found for Year {year}, Day {day}.");
         
         return foundType;
+    }
+    
+    private string GetProblemPath(int year, int day, bool includeTest = false) {
+        var folder = Path.Combine(year.ToString(), $"Day{day:00}");
+
+        if (includeTest)
+            folder = Path.Combine(folder, "test");
+        
+        return folder;
     }
 }
