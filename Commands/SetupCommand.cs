@@ -19,9 +19,10 @@ internal class SetupCommand : Command<SetupCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings) {
         var problem = _problemService.FetchAndParseProblem(settings.Year, settings.Day).GetAwaiter().GetResult();
-        
-        // Create README, Solution.cs template, and test/ folder with test1.in and test1.refout
-        _problemService.CreateProblemFiles(problem);
+        _problemService.CreateProblemFiles(problem).GetAwaiter().GetResult();
+
+        if (!settings.NoGit ?? true)
+            _problemService.SetupGitForProblem(settings.Year, settings.Day);
         
         return 0;
     }

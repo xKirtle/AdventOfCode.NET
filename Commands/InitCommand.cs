@@ -18,7 +18,7 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
 
         [Description("Your repostiroy's default branch")]
         [CommandOption("-b|--branch")]
-        [DefaultValue("main")]
+        [DefaultValue("master")]
         public string DefaultBranch { get; init; }
     }
 

@@ -1,7 +1,9 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using AoC.NET.Model;
 using HtmlAgilityPack;
+using LibGit2Sharp;
 using Spectre.Console;
 
 namespace AoC.NET.Services;
@@ -10,6 +12,7 @@ internal interface IProblemService
 {
     Task<Problem> FetchAndParseProblem(int year, int day);
     Task CreateProblemFiles(Problem problem);
+    void SetupGitForProblem(int year, int day);
 }
 
 internal class ProblemService : IProblemService
@@ -59,7 +62,45 @@ internal class ProblemService : IProblemService
         
         await Task.WhenAll(tasks);
     }
+    public void SetupGitForProblem(int year, int day) {
+        using var repo = new Repository(".git");
+        var defaultBranch = repo.Branches[GetGitDefaultBranches().FirstOrDefault(x => repo.Branches[x] != null)];
+        
+        if (defaultBranch == null)
+            throw new InvalidOperationException("Could not find a default branch of the repository. If you're using something other than 'main' or 'master', please set the AOC_GIT_DEFAULT_BRANCH environment variable with its name.");
+        
+        var newProblemBranch = repo.Branches[$"problems/Y{year}/D{day}"];
+        var branchExists = newProblemBranch != null;
+        newProblemBranch ??= repo.Branches.Add($"problems/Y{year}/D{day}", defaultBranch.Tip, allowOverwrite: true);
+        LibGit2Sharp.Commands.Checkout(repo, newProblemBranch);
+
+        if (!branchExists) {
+            LibGit2Sharp.Commands.Stage(repo, year.ToString());
+            var author = repo.Config.BuildSignature(DateTimeOffset.Now);
+
+            if (author == null) {
+                var msg = "Author information not found in global Git configuration. Please set your name and email with 'git config --global user.name \"Your Name\"' and 'git config --global user.email \"";
+                throw new InvalidOperationException(msg);
+            }
+            
+            repo.Commit($"Initial commit for Y{year}D{day}", author, author);
+            repo.Tags.Add($"Y{year}D{day}", repo.Head.Tip);
+            
+            OpenJetBrainsRider([$"{year}/Day{day:00}/README.md", $"{year}/Day{day:00}/Solution.cs", $"{year}/Day{day:00}/test/test1.aoc"]);
+        }
+        else {
+            AnsiConsole.MarkupLine($"[yellow]Branch {newProblemBranch.FriendlyName} already exists. Skipping.[/]");
+        }
+    }
     
+    private static void OpenJetBrainsRider(ReadOnlySpan<string> args) 
+    {
+        string riderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Rider\bin\rider64.exe");
+        string arguments = string.Join(" ", args.ToArray());
+
+        Process.Start(riderPath, arguments).WaitForExit();
+    }
+
     private string GetOrCreateProblemPath(Problem problem, bool includeTest = false) {
         var folder = Path.Combine(problem.Year.ToString(), $"Day{problem.Day:00}");
 
@@ -104,5 +145,22 @@ public class Solution : ISolver
     }}
 }}
 ";
+    }
+    
+    // TODO: Maybe don't hardcode these and simply rely on the user's environment variables?
+    private static List<string> GetGitRemoteNames() {
+        var remoteName = Environment.GetEnvironmentVariable("AOC_GIT_REMOTE_NAME");
+        return new [] { remoteName, "origin", "upstream" }
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
+    
+    private static List<string> GetGitDefaultBranches() {
+        var defaultBranch = Environment.GetEnvironmentVariable("AOC_GIT_DEFAULT_BRANCH");
+        return new [] { defaultBranch, "main", "master" }
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
     }
 }
