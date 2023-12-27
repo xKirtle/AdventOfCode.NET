@@ -37,15 +37,8 @@ internal class ProblemService : IProblemService
 
         problem.Title = htmlDoc.DocumentNode.SelectSingleNode("//article[1]//h2").InnerText;
         problem.Input = await _httpService.FetchProblemInput(year, day);
-
+        
         foreach (var article in htmlDoc.DocumentNode.SelectNodes("//article")) {
-            var exampleInput = Regex.Match(article.InnerHtml, @"<pre><code>([\s\S]*?)<\/code><\/pre>").Groups[1].Value;
-            var exampleResult = Regex.Match(article.InnerHtml, @"<code><em>(.*?)<\/em><\/code>").Groups[1].Value;
-            problem.Examples.Add((exampleInput, exampleResult));
-
-            // TODO: Need to also parse part 1 (do I need part 2 as well?) result if already solved
-            // Maybe include the <p> between articles containing the correct answer for the previous part?
-            
             problem.ContentMd += article.InnerHtml;
         }
         
@@ -57,7 +50,7 @@ internal class ProblemService : IProblemService
             CreateFileAsync(problem, "README.md", problem.ContentMd),
             CreateFileAsync(problem, "Solution.cs", GetSolutionTemplate(problem)),
             CreateFileAsync(problem, "input.aoc", problem.Input),
-            CreateProblemTests(problem)
+            CreateProblemTestTemplate(problem)
         };
         
         await Task.WhenAll(tasks);
@@ -121,14 +114,10 @@ internal class ProblemService : IProblemService
         await File.WriteAllTextAsync(file, content, Encoding.UTF8);
     }
 
-    private async Task CreateProblemTests(Problem problem) {
+    private async Task CreateProblemTestTemplate(Problem problem) {
         // Making sure the test folder exists
         GetOrCreateProblemPath(problem.Year, problem.Day, includeTest: true);
-        
-        for (int i = 0; i < problem.Examples.Count; i++) {
-            var (input, output) = problem.Examples[i];
-            await _solverService.CreateTest(problem.Year, problem.Day, exampleNumber: i, input, output);
-        }
+        await _solverService.CreateTestTemplate(problem.Year, problem.Day);
     }
 
     private string GetSolutionTemplate(Problem problem) {

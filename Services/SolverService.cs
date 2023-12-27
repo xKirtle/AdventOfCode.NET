@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using AoC.NET.Model;
 using Spectre.Console;
 
@@ -6,7 +7,7 @@ namespace AoC.NET.Services;
 
 internal interface ISolverService
 {
-    Task CreateTest(int year, int day, int exampleNumber, string input, string output);
+    Task CreateTestTemplate(int year, int day);
     Task SolveProblemTests(int year, int day);
     Task SolveProblem(int year, int day);
 }
@@ -19,17 +20,16 @@ internal class SolverService : ISolverService
         _httpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
     }
     
-    public async Task CreateTest(int year, int day, int exampleNumber, string input, string output) {
-        var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), $"test{exampleNumber}.aoc");
+    public async Task CreateTestTemplate(int year, int day) {
+        var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), $"test0.conf");
         
         var sb = new StringBuilder()
-            .AppendLine($"Part: {exampleNumber + 1}")
-            .AppendLine()
+            .AppendLine($"Part: [one/two]")
             .AppendLine("Input:")
-            .AppendLine(input.Trim())
-            .AppendLine()
-            .AppendLine("Expected Output:")
-            .AppendLine(output.Trim());
+            .AppendLine("# Your test input goes here")
+            .AppendLine("# and also here, if multiline")
+            .AppendLine("Output:")
+            .AppendLine("# Your expected output goes here");
 
         AnsiConsole.MarkupLine($"[green]Writing {filePath}[/]");
         await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
@@ -39,19 +39,25 @@ internal class SolverService : ISolverService
         var solution = GetSolutionInstance(year, day);
         var testDirectory = GetProblemPath(year, day, includeTest: true);
 
-        foreach (var file in Directory.GetFiles(testDirectory, "*.aoc")) {
+        var sw = Stopwatch.StartNew();
+        foreach (var file in Directory.GetFiles(testDirectory, "*.conf")) {
+            var testStartTime = sw.ElapsedMilliseconds;
+            
             var (problemPart, input, output) = await ParseTestFile(year, day, Path.GetFileName(file));
-
-            if (problemPart != 1 && problemPart != 2)
-                throw new InvalidOperationException($"Invalid problem part {problemPart}.");
             
-            var result = problemPart == 1 ? solution.PartOne(input) : solution.PartTwo(input);
+            var result = problemPart switch {
+                "one" => solution.PartOne(input),
+                "two" => solution.PartTwo(input),
+                _ => throw new InvalidOperationException($"Invalid problem part in {Path.GetFileName(file)}. Expected 'one' or 'two' but got '{problemPart}'")
+            };
             
-            // TODO: Handle wrong answers without throwing an exception... Properly format the output?
             if (result.ToString() != output)
                 throw new InvalidOperationException($"Test failed for {Path.GetFileName(file)}. Expected {output}, got {result}.");
+
+            var testTotalTime = sw.ElapsedMilliseconds - testStartTime;
+            var colorTag = testTotalTime > 1000 ? "red" : testTotalTime > 500 ? "yellow" : "green";
             
-            AnsiConsole.MarkupLine($"[green]Test passed for {Path.GetFileName(file)}[/]");
+            AnsiConsole.MarkupLine($"[green]Test passed for {Path.GetFileName(file)}[/] in [{colorTag}]{testTotalTime}ms[/]");
         }
     }
     
@@ -59,25 +65,31 @@ internal class SolverService : ISolverService
         var solution = GetSolutionInstance(year, day);
         var input = await File.ReadAllTextAsync(Path.Combine(GetProblemPath(year, day), "input.aoc"), Encoding.UTF8);
         var level = await _httpService.FetchProblemLevel(year, day);
-        var solutionResult = level == "1" ? solution.PartOne(input) : solution.PartTwo(input);
+        var solutionResult = level switch {
+            "1" => solution.PartOne(input),
+            "2" => solution.PartTwo(input),
+            null => null,
+            // null => throw new NotImplementedException("Problem was already solved in AoC."), // TODO: Decide what to do with solved problems
+            _ => throw new InvalidOperationException($"Invalid problem part: {level}.")
+        };
         
-        await _httpService.SubmitSolution(year, day, level, solutionResult.ToString());
+        await _httpService.SubmitSolution(year, day, level, solutionResult?.ToString() ?? "");
     }
 
-    private async Task<(int problemPart, string input, string output)> ParseTestFile(int year, int day, string fileNameWithExtension) {
+    private async Task<(string problemPart, string input, string output)> ParseTestFile(int year, int day, string fileNameWithExtension) {
         var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), fileNameWithExtension);
         
         string fileContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
-        string[] parts = fileContent.Split(new[] { "Part:", "Input:", "Expected Output:" }, StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = fileContent.Split(new[] { "Part:", "Input:", "Output:" }, StringSplitOptions.RemoveEmptyEntries);
 
         var problemPart = parts[0].Trim();
         var input = parts[1].Trim();
         var output = parts[2].Trim();
         
-        if (parts.Length != 3 || !int.TryParse(problemPart, out int problemPartNumber) || string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(output))
+        if (parts.Length != 3 || string.IsNullOrWhiteSpace(problemPart) || string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(output))
             throw new InvalidOperationException("Test file format is incorrect or input/output is missing.");
 
-        return (problemPartNumber, input, output);
+        return (problemPart, input, output);
     }
     
     

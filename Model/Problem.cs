@@ -7,5 +7,4 @@ internal class Problem
     public int Day { get; set; }
     public int Year { get; set; }
     public string Input { get; set; } = string.Empty;
-    public List<(string, string)> Examples { get; set; } = new List<(string, string)>();
 }

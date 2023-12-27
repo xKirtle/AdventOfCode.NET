@@ -9,7 +9,7 @@ internal interface IHttpService
 {
     Task<string> FetchProblem(int year, int day);
     Task<string> FetchProblemInput(int year, int day);
-    Task<string> FetchProblemLevel(int year, int day);
+    Task<string?> FetchProblemLevel(int year, int day);
     Task SubmitSolution(int year, int day, string level, string answer);
 }
 
@@ -41,12 +41,12 @@ internal class HttpService : IHttpService
         return await FetchContentAsync($"{year}/day/{day}/input");
     }
     
-    public async Task<string> FetchProblemLevel(int year, int day) {
+    public async Task<string?> FetchProblemLevel(int year, int day) {
         var htmlContent = await FetchProblem(year, day);
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(htmlContent);
         
-        return htmlDoc.DocumentNode.SelectSingleNode("//form//input[1]").Attributes["value"].Value;
+        return htmlDoc.DocumentNode.SelectSingleNode("//form//input[1]")?.Attributes["value"].Value;
     }
 
     public async Task SubmitSolution(int year, int day, string level, string answer) {
@@ -94,8 +94,7 @@ internal class HttpService : IHttpService
 
         return sb.ToString();
     }
-
-
+    
     private async Task<string> FetchContentAsync(string path) {
         var requestUri = new Uri(_aocBaseAddress + path);
         AnsiConsole.MarkupLine($"[green]Fetching from {requestUri}[/]");
