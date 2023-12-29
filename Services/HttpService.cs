@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Spectre.Console;
 
@@ -38,7 +39,10 @@ internal class HttpService : IHttpService
     }
 
     public async Task<string> FetchProblemInput(int year, int day) {
-        return await FetchContentAsync($"{year}/day/{day}/input");
+        var content = await FetchContentAsync($"{year}/day/{day}/input");
+        
+        // Standardize to LF, then replace LF with Environment.NewLine
+        return content.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
     }
     
     public async Task<string?> FetchProblemLevel(int year, int day) {
@@ -56,7 +60,7 @@ internal class HttpService : IHttpService
             { "answer", answer }
         });
         
-        AnsiConsole.MarkupLine($"Submitting solution of problem [green]{year}/{day}[/] - [green]part {(level == "1" ? "one" : "two")}[/]");
+        AnsiConsole.MarkupLine($"Submitting [green]{answer}[/] as the solution for problem [green]{year}/{day}[/] - [green]part {(level == "1" ? "one" : "two")}[/]");
         var responseMessage = await _client.PostAsync(requestUri, content);
         
         if (!responseMessage.IsSuccessStatusCode) {
@@ -73,26 +77,38 @@ internal class HttpService : IHttpService
     private async Task<string> ParseSubmitResponseAsync(string responseContent) {
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(responseContent);
-    
-        var responseNode = htmlDoc.DocumentNode.SelectSingleNode("//article//p");
-        responseNode.ChildNodes.RemoveAt(responseNode.ChildNodes.Count - 1);
-
+        
         var sb = new StringBuilder();
-        foreach (var child in responseNode.ChildNodes) {
-            if (child.Name == "a") {
-                var href = child.GetAttributeValue("href", string.Empty);
-                if (!href.StartsWith("http://") && !href.StartsWith("https://")) {
-                    href = "https://adventofcode.com" + href;
-                }
-                
-                sb.Append(href);
-            }
-            else {
-                sb.Append(child.InnerText);
+        var responseNode = htmlDoc.DocumentNode.SelectSingleNode("//article//p[1]");
+
+        if (responseNode?.ChildNodes?.Any(child => child.HasClass("day-success")) ?? false) {
+            sb.Append("That's the right answer!");
+            
+            var daySuccessNode = htmlDoc.DocumentNode.SelectSingleNode("//article//p[2]");
+            if (daySuccessNode != null) {
+                var match = Regex.Match(daySuccessNode.InnerText, @"You have completed Day \d+!");
+                if (match.Success)
+                    sb.Append(" ").Append(match.Groups[0].Value);
             }
         }
+        else {
+            // Removing the [Return to Day X] link at the end of the error message
+            var errorMessage = responseNode?.InnerText?.Split('[')[0].Trim() ?? "Unknown error!";
 
-        return sb.ToString();
+            var match = Regex.Match(errorMessage, @"[Pp]lease wait (.*?) before trying again");
+            if (match.Success) {
+                errorMessage = errorMessage.Replace(match.Groups[1].Value, "[red]" + match.Groups[1].Value + "[/]");
+            }
+
+            match = Regex.Match(errorMessage, @"have ((?:(?!to wait).)*?) left to wait");
+            if (match.Success) {
+                errorMessage = errorMessage.Replace(match.Groups[1].Value, "[red]" + match.Groups[1].Value + "[/]");
+            }
+            
+            sb.Append(errorMessage);
+        }
+        
+        return sb.Replace("  ", " ").ToString();
     }
     
     private async Task<string> FetchContentAsync(string path) {

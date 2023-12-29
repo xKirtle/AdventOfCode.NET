@@ -39,7 +39,7 @@ internal class ProblemService : IProblemService
         problem.Input = await _httpService.FetchProblemInput(year, day);
         
         foreach (var article in htmlDoc.DocumentNode.SelectNodes("//article")) {
-            problem.ContentMd += article.InnerHtml;
+            problem.ContentMd += article.InnerHtml.Replace("<em", "<strong").Replace("</em>", "</strong>");
         }
         
         return problem;
@@ -78,12 +78,12 @@ internal class ProblemService : IProblemService
             
             repo.Commit($"Initial commit for Y{year}D{day}", author, author);
             repo.Tags.Add($"Y{year}D{day}", repo.Head.Tip);
-            
-            OpenJetBrainsRider([$"{year}/Day{day:00}/README.md", $"{year}/Day{day:00}/Solution.cs", $"{year}/Day{day:00}/test/test1.aoc"]);
         }
         else {
             AnsiConsole.MarkupLine($"[yellow]Branch {newProblemBranch.FriendlyName} already exists. Skipping git setup.[/]");
         }
+        
+        OpenJetBrainsRider([$"{year}/Day{day:00}/README.md", $"{year}/Day{day:00}/Solution.cs", $"{year}/Day{day:00}/test/test1.aoc"]);
     }
     
     private string GetOrCreateProblemPath(int year, int day, bool includeTest = false) {

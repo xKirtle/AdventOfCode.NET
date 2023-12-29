@@ -63,8 +63,8 @@ internal class SolverService : ISolverService
     
     public async Task SolveProblem(int year, int day) {
         var solution = GetSolutionInstance(year, day);
-        var input = await File.ReadAllTextAsync(Path.Combine(GetProblemPath(year, day), "input.aoc"), Encoding.UTF8);
-        var level = await _httpService.FetchProblemLevel(year, day);
+        var input = (await File.ReadAllTextAsync(Path.Combine(GetProblemPath(year, day), "input.aoc"), Encoding.UTF8)).Trim();
+        var level = await _httpService.FetchProblemLevel(year, day); // is null if problem is fully solved
         var solutionResult = level switch {
             "1" => solution.PartOne(input),
             "2" => solution.PartTwo(input),
@@ -82,7 +82,7 @@ internal class SolverService : ISolverService
         string fileContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
         string[] parts = fileContent.Split(new[] { "Part:", "Input:", "Output:" }, StringSplitOptions.RemoveEmptyEntries);
 
-        var problemPart = parts[0].Trim();
+        var problemPart = parts[0].Replace("[", "").Replace("]", "").Trim();
         var input = parts[1].Trim();
         var output = parts[2].Trim();
         
