@@ -39,6 +39,11 @@ internal class SolverService : ISolverService
         var solution = GetSolutionInstance(year, day);
         var testDirectory = GetProblemPath(year, day, includeTest: true);
 
+        if (!Directory.Exists(testDirectory)) {
+            AnsiConsole.MarkupLine("[yellow]Warning: [/]No test directory found. Skipping...");
+            return;
+        }
+
         var sw = Stopwatch.StartNew();
         foreach (var file in Directory.GetFiles(testDirectory, "*.conf")) {
             var testStartTime = sw.ElapsedMilliseconds;
@@ -69,11 +74,15 @@ internal class SolverService : ISolverService
             "1" => solution.PartOne(input),
             "2" => solution.PartTwo(input),
             null => null,
-            // null => throw new NotImplementedException("Problem was already solved in AoC."), // TODO: Decide what to do with solved problems
             _ => throw new InvalidOperationException($"Invalid problem part: {level}.")
         };
+
+        if (solutionResult == null) {
+            AnsiConsole.MarkupLine($"[green]Problem {year}/{day}[/] is already solved in AoC. Skipping submission...");
+            return;
+        }
         
-        await _httpService.SubmitSolution(year, day, level, solutionResult?.ToString() ?? "");
+        await _httpService.SubmitSolution(year, day, level, solutionResult.ToString());
     }
 
     private async Task<(string problemPart, string input, string output)> ParseTestFile(int year, int day, string fileNameWithExtension) {
