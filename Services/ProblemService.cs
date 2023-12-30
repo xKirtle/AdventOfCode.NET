@@ -10,8 +10,8 @@ namespace AoC.NET.Services;
 
 internal interface IProblemService
 {
-    Task<(string contentMd, string input)> FetchAndParseProblem(int year, int day);
-    Task CreateProblemFiles(int year, int day, string contentMd, string input);
+    Task<(string contentMd, string input, string[] answers)> FetchAndParseProblem(int year, int day);
+    Task CreateProblemFiles(int year, int day, string contentMd, string input, string[] answers);
     void SetupGitForProblem(int year, int day);
 }
 
@@ -25,7 +25,7 @@ internal class ProblemService : IProblemService
         _solverService = solverService ?? throw new ArgumentNullException(nameof(solverService));
     }
 
-    public async Task<(string contentMd, string input)> FetchAndParseProblem(int year, int day) {
+    public async Task<(string contentMd, string input, string[] answers)> FetchAndParseProblem(int year, int day) {
         var htmlContent = await _httpService.FetchProblem(year, day);
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(htmlContent);
@@ -36,17 +36,26 @@ internal class ProblemService : IProblemService
         foreach (var article in htmlDoc.DocumentNode.SelectNodes("//article")) {
             contentMd += article.InnerHtml.Replace("<em", "<strong").Replace("</em>", "</strong>");
         }
+
+        var answers = htmlDoc.DocumentNode.SelectNodes("//article/following-sibling::p//code")
+            .Select(x => x.InnerText)
+            .ToArray();
         
-        return (contentMd, input);
+        return (contentMd, input, answers);
     }
     
-    public async Task CreateProblemFiles(int year, int day, string contentMd, string input) {
+    public async Task CreateProblemFiles(int year, int day, string contentMd, string input, string[] answers) {
         var tasks = new List<Task>() {
             CreateFileAsync(year, day, "README.md", contentMd),
             CreateFileAsync(year, day, "Solution.cs", GetSolutionTemplate(year, day)),
             CreateFileAsync(year, day, "input.aoc", input),
             CreateProblemTestTemplate(year, day)
         };
+
+        // Only expecting a max of 2 parts per problem
+        if (answers?.Length > 0 && answers?.Length <= 2) {
+            tasks.Add(CreateProblemInputTests(year, day, input, answers));
+        }
         
         await Task.WhenAll(tasks);
     }
@@ -109,6 +118,21 @@ internal class ProblemService : IProblemService
         await File.WriteAllTextAsync(file, content, Encoding.UTF8);
     }
 
+    private async Task CreateProblemInputTests(int year, int day, string input, string[] answers) {
+        for (int i = 0; i < answers.Length; i++) {
+            var sb = new StringBuilder()
+                .AppendLine($"Part: {(i == 0 ? "one" : "two")}")
+                .AppendLine("Input:")
+                .AppendLine(input)
+                .AppendLine("Output:")
+                .AppendLine(answers[i]);
+            
+            // Ensure test path exists
+            GetOrCreateProblemPath(year, day, includeTest: true);
+            await CreateFileAsync(year, day, $"test/inputTest{i}.aoc", sb.ToString());
+        }
+    }
+    
     private async Task CreateProblemTestTemplate(int year, int day) {
         var sb = new StringBuilder()
             .AppendLine($"Part: [one/two]")
@@ -120,7 +144,7 @@ internal class ProblemService : IProblemService
         
         // Ensure test path exists
         GetOrCreateProblemPath(year, day, includeTest: true);
-        await CreateFileAsync(year, day, "test/test.aoc", sb.ToString());
+        await CreateFileAsync(year, day, "test/customTest.aoc", sb.ToString());
     }
 
     private string GetSolutionTemplate(int year, int day) {

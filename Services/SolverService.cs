@@ -37,15 +37,17 @@ internal class SolverService : ISolverService
             var result = problemPart switch {
                 "one" => solution.PartOne(input),
                 "two" => solution.PartTwo(input),
-                _ => throw new InvalidOperationException($"Invalid problem part in {Path.GetFileName(file)}. Expected 'one' or 'two' but got '{problemPart}'")
+                _ => throw new InvalidOperationException($"Invalid problem part in [{Path.GetFileName(file)}]. Expected 'one' or 'two' but got '{problemPart}'")
             };
             
-            if (result.ToString() != output)
-                throw new InvalidOperationException($"Test failed for {Path.GetFileName(file)}. Expected {output}, got {result}.");
-
             var testTotalTime = sw.ElapsedMilliseconds - testStartTime;
             var colorTag = testTotalTime > 1000 ? "red" : testTotalTime > 500 ? "yellow" : "green";
-            
+
+            if (result.ToString() != output) {
+                AnsiConsole.MarkupLine($"[red]Error:[/] Test failed for {Path.GetFileName(file)} in {testTotalTime}ms. Expected {output}, got {result}.");
+                return;
+            }
+
             AnsiConsole.MarkupLine($"[green]Test passed for {Path.GetFileName(file)}[/] in [{colorTag}]{testTotalTime}ms[/]");
         }
     }
@@ -61,6 +63,7 @@ internal class SolverService : ISolverService
             _ => throw new InvalidOperationException($"Invalid problem part: {level}.")
         };
 
+        // Alternatively, to see if a problem is solved, we could check if <p class="day-success"> exists in the problem's HTML
         if (solutionResult == null) {
             AnsiConsole.MarkupLine($"[green]Problem {year}/{day}[/] is already solved in AoC. Skipping submission...");
             return;

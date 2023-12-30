@@ -18,8 +18,8 @@ internal sealed class SetupCommand : Command<SetupCommand.Settings>
     }
 
     public override int Execute(CommandContext context, Settings settings) {
-        var (contentMd, input) = _problemService.FetchAndParseProblem(settings.Year, settings.Day).GetAwaiter().GetResult();
-        _problemService.CreateProblemFiles(settings.Year, settings.Day, contentMd, input).GetAwaiter().GetResult();
+        var (contentMd, input, answers) = _problemService.FetchAndParseProblem(settings.Year, settings.Day).GetAwaiter().GetResult();
+        _problemService.CreateProblemFiles(settings.Year, settings.Day, contentMd, input, answers).GetAwaiter().GetResult();
 
         if (!settings.NoGit ?? true)
             _problemService.SetupGitForProblem(settings.Year, settings.Day);
