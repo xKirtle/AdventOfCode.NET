@@ -26,6 +26,9 @@ internal class ProblemService : IProblemService
     }
 
     public async Task<Problem> FetchAndParseProblem(int year, int day) {
+        // TODO: Ditch Problem class entirely? It's only used for the README.md file and the input file. Both of which could be generated without it.
+        // TODO: Maybe just return a tuple of (string, string) for the README.md and input file content?
+        
         var htmlContent = await _httpService.FetchProblem(year, day);
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(htmlContent);
@@ -47,10 +50,10 @@ internal class ProblemService : IProblemService
     
     public async Task CreateProblemFiles(Problem problem) {
         var tasks = new List<Task>() {
-            CreateFileAsync(problem, "README.md", problem.ContentMd),
-            CreateFileAsync(problem, "Solution.cs", GetSolutionTemplate(problem)),
-            CreateFileAsync(problem, "input.aoc", problem.Input),
-            CreateProblemTestTemplate(problem)
+            CreateFileAsync(problem.Year, problem.Day, "README.md", problem.ContentMd),
+            CreateFileAsync(problem.Year, problem.Day, "Solution.cs", GetSolutionTemplate(problem)),
+            CreateFileAsync(problem.Year, problem.Day, "input.aoc", problem.Input),
+            CreateProblemTestTemplate(problem.Year, problem.Day)
         };
         
         await Task.WhenAll(tasks);
@@ -83,7 +86,7 @@ internal class ProblemService : IProblemService
             AnsiConsole.MarkupLine($"[yellow]Branch {newProblemBranch.FriendlyName} already exists. Skipping git setup.[/]");
         }
         
-        OpenJetBrainsRider([$"{year}/Day{day:00}/README.md", $"{year}/Day{day:00}/Solution.cs", $"{year}/Day{day:00}/test/test1.aoc"]);
+        OpenJetBrainsRider([$"{year}/Day{day:00}/README.md", $"{year}/Day{day:00}/Solution.cs", $"{year}/Day{day:00}/test/test.aoc"]);
     }
     
     private string GetOrCreateProblemPath(int year, int day, bool includeTest = false) {
@@ -100,24 +103,32 @@ internal class ProblemService : IProblemService
         return folder;
     }
     
-    private static void OpenJetBrainsRider(ReadOnlySpan<string> args) 
+    private static void OpenJetBrainsRider(string[] args) 
     {
         string riderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Rider\bin\rider64.exe");
-        string arguments = string.Join(" ", args.ToArray());
+        string arguments = string.Join(" ", args);
 
         Process.Start(riderPath, arguments).WaitForExit();
     }
 
-    private async Task CreateFileAsync(Problem problem, string filename, string content) {
-        var file = Path.Combine(GetOrCreateProblemPath(problem.Year, problem.Day), filename);
+    private async Task CreateFileAsync(int year, int day, string fileNameWithExtension, string content) {
+        var file = Path.Combine(GetOrCreateProblemPath(year, day), fileNameWithExtension);
         AnsiConsole.MarkupLine($"[green]Writing {file}[/]");
         await File.WriteAllTextAsync(file, content, Encoding.UTF8);
     }
 
-    private async Task CreateProblemTestTemplate(Problem problem) {
-        // Making sure the test folder exists
-        GetOrCreateProblemPath(problem.Year, problem.Day, includeTest: true);
-        await _solverService.CreateTestTemplate(problem.Year, problem.Day);
+    private async Task CreateProblemTestTemplate(int year, int day) {
+        var sb = new StringBuilder()
+            .AppendLine($"Part: [one/two]")
+            .AppendLine("Input:")
+            .AppendLine("# Your test input goes here")
+            .AppendLine("# and also here, if multiline")
+            .AppendLine("Output:")
+            .AppendLine("# Your expected output goes here");
+        
+        // Ensure test path exists
+        GetOrCreateProblemPath(year, day, includeTest: true);
+        await CreateFileAsync(year, day, "test/test.aoc", sb.ToString());
     }
 
     private string GetSolutionTemplate(Problem problem) {

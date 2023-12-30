@@ -7,7 +7,6 @@ namespace AoC.NET.Services;
 
 internal interface ISolverService
 {
-    Task CreateTestTemplate(int year, int day);
     Task SolveProblemTests(int year, int day);
     Task SolveProblem(int year, int day);
 }
@@ -19,22 +18,7 @@ internal class SolverService : ISolverService
     public SolverService(IHttpService httpService) {
         _httpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
     }
-    
-    public async Task CreateTestTemplate(int year, int day) {
-        var filePath = Path.Combine(GetProblemPath(year, day, includeTest: true), $"test0.conf");
-        
-        var sb = new StringBuilder()
-            .AppendLine($"Part: [one/two]")
-            .AppendLine("Input:")
-            .AppendLine("# Your test input goes here")
-            .AppendLine("# and also here, if multiline")
-            .AppendLine("Output:")
-            .AppendLine("# Your expected output goes here");
 
-        AnsiConsole.MarkupLine($"[green]Writing {filePath}[/]");
-        await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
-    }
-    
     public async Task SolveProblemTests(int year, int day) {
         var solution = GetSolutionInstance(year, day);
         var testDirectory = GetProblemPath(year, day, includeTest: true);
@@ -45,7 +29,7 @@ internal class SolverService : ISolverService
         }
 
         var sw = Stopwatch.StartNew();
-        foreach (var file in Directory.GetFiles(testDirectory, "*.conf")) {
+        foreach (var file in Directory.GetFiles(testDirectory, "*.aoc")) {
             var testStartTime = sw.ElapsedMilliseconds;
             
             var (problemPart, input, output) = await ParseTestFile(year, day, Path.GetFileName(file));
@@ -111,8 +95,8 @@ internal class SolverService : ISolverService
                 if (!typeof(ISolver).IsAssignableFrom(type))
                     continue;
                 
-                var attributes = type.GetCustomAttributes(typeof(AoCSolutionAttribute), false);
-                if (attributes.FirstOrDefault() is AoCSolutionAttribute attribute && attribute.Year == year && attribute.Day == day) {
+                var attribute = type.GetCustomAttributes(typeof(AoCSolutionAttribute), false).FirstOrDefault() as AoCSolutionAttribute;
+                if (attribute?.Year == year && attribute?.Day == day) {
                     if (foundType != null)
                         throw new InvalidOperationException($"Multiple solution classes found for Year {year}, Day {day}. Ensure only one class is marked with AoCSolutionAttribute for each day.");
                     

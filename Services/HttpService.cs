@@ -72,6 +72,12 @@ internal class HttpService : IHttpService
         var parsedResponse = await ParseSubmitResponseAsync(responseContent);
         
         AnsiConsole.MarkupLine($"[green]Response:[/] {parsedResponse}");
+        
+        // TODO: Return the correct response value from AoC (or null, if the problem is already solved or the answer is wrong)
+        // Then, update input.aoc with the correct answer so we can run benchmarks locally
+        // Or... create a new method that parses the problem's page and checks if it's already solved (either partially or fully)
+        // Having this new method would mean that when first setting up a problem (that could be already partially or fully solved)
+        // we'd already be saving the correct responses locally
     }
 
     private async Task<string> ParseSubmitResponseAsync(string responseContent) {
