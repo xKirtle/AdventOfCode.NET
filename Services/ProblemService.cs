@@ -10,8 +10,8 @@ namespace AoC.NET.Services;
 
 internal interface IProblemService
 {
-    Task<Problem> FetchAndParseProblem(int year, int day);
-    Task CreateProblemFiles(Problem problem);
+    Task<(string contentMd, string input)> FetchAndParseProblem(int year, int day);
+    Task CreateProblemFiles(int year, int day, string contentMd, string input);
     void SetupGitForProblem(int year, int day);
 }
 
@@ -25,35 +25,27 @@ internal class ProblemService : IProblemService
         _solverService = solverService ?? throw new ArgumentNullException(nameof(solverService));
     }
 
-    public async Task<Problem> FetchAndParseProblem(int year, int day) {
-        // TODO: Ditch Problem class entirely? It's only used for the README.md file and the input file. Both of which could be generated without it.
-        // TODO: Maybe just return a tuple of (string, string) for the README.md and input file content?
-        
+    public async Task<(string contentMd, string input)> FetchAndParseProblem(int year, int day) {
         var htmlContent = await _httpService.FetchProblem(year, day);
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(htmlContent);
 
-        var problem = new Problem() {
-            Year = year,
-            Day = day
-        };
+        var input = await _httpService.FetchProblemInput(year, day);
 
-        problem.Title = htmlDoc.DocumentNode.SelectSingleNode("//article[1]//h2").InnerText;
-        problem.Input = await _httpService.FetchProblemInput(year, day);
-        
+        var contentMd = string.Empty;
         foreach (var article in htmlDoc.DocumentNode.SelectNodes("//article")) {
-            problem.ContentMd += article.InnerHtml.Replace("<em", "<strong").Replace("</em>", "</strong>");
+            contentMd += article.InnerHtml.Replace("<em", "<strong").Replace("</em>", "</strong>");
         }
         
-        return problem;
+        return (contentMd, input);
     }
     
-    public async Task CreateProblemFiles(Problem problem) {
+    public async Task CreateProblemFiles(int year, int day, string contentMd, string input) {
         var tasks = new List<Task>() {
-            CreateFileAsync(problem.Year, problem.Day, "README.md", problem.ContentMd),
-            CreateFileAsync(problem.Year, problem.Day, "Solution.cs", GetSolutionTemplate(problem)),
-            CreateFileAsync(problem.Year, problem.Day, "input.aoc", problem.Input),
-            CreateProblemTestTemplate(problem.Year, problem.Day)
+            CreateFileAsync(year, day, "README.md", contentMd),
+            CreateFileAsync(year, day, "Solution.cs", GetSolutionTemplate(year, day)),
+            CreateFileAsync(year, day, "input.aoc", input),
+            CreateProblemTestTemplate(year, day)
         };
         
         await Task.WhenAll(tasks);
@@ -131,12 +123,12 @@ internal class ProblemService : IProblemService
         await CreateFileAsync(year, day, "test/test.aoc", sb.ToString());
     }
 
-    private string GetSolutionTemplate(Problem problem) {
+    private string GetSolutionTemplate(int year, int day) {
         return $@"using AoC.NET.Model;
 
-namespace AoC.NET.Problems.Y{problem.Year}.Day{problem.Day:00};
+namespace AoC.NET.Problems.Y{year}.Day{day:00};
 
-[AoCSolution({problem.Year}, {problem.Day})]
+[AoCSolution({year}, {day:00})]
 public class Solution : ISolver
 {{
     public object PartOne(string input) {{
