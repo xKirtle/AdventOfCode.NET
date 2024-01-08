@@ -5,7 +5,7 @@ using Spectre.Console.Cli;
 
 namespace AdventOfCode.NET.Commands;
 
-[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global", Justification = "Instantiated by Spectre.Console.Cli")]
 internal sealed class InitCommand : Command<InitCommand.Settings>
 {
     public sealed class Settings : CommandSettings
