@@ -3,30 +3,22 @@ using Spectre.Console.Cli;
 
 namespace AdventOfCode.NET.DependencyInjection;
 
-public sealed class TypeRegistrar : ITypeRegistrar
+public sealed class TypeRegistrar(IServiceCollection builder) : ITypeRegistrar
 {
-    private readonly IServiceCollection _builder;
-
-    public TypeRegistrar(IServiceCollection builder) {
-        _builder = builder;
-    }
-
     public ITypeResolver Build() {
-        return new TypeResolver(_builder.BuildServiceProvider());
+        return new TypeResolver(builder.BuildServiceProvider());
     }
 
     public void Register(Type service, Type implementation) {
-        _builder.AddSingleton(service, implementation);
+        builder.AddSingleton(service, implementation);
     }
 
     public void RegisterInstance(Type service, object implementation) {
-        _builder.AddSingleton(service, implementation);
+        builder.AddSingleton(service, implementation);
     }
 
     public void RegisterLazy(Type service, Func<object> factory) {
-        if (factory is null)
-            throw new ArgumentNullException(nameof(factory));
-
-        _builder.AddSingleton(service, (provider) => factory());
+        ArgumentNullException.ThrowIfNull(factory);
+        builder.AddSingleton(service, _ => factory());
     }
 }

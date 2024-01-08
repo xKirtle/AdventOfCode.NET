@@ -12,6 +12,9 @@ var app = new CommandApp(registrar);
 app.Configure(config => {
     config.AddCommand<InitCommand>("init")
         .WithDescription("Initialize environment variables.");
+    
+    config.AddCommand<SetupCommand>("setup")
+        .WithDescription("Setup a new problem.");
 });
         
 return app.Run(args);
