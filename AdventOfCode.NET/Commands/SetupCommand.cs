@@ -15,8 +15,8 @@ internal sealed class SetupCommand : Command<SetupCommand.Settings>
         public required bool? NoGit { get; init; } = null!;
     }
 
-    public override int Execute(CommandContext context, Settings settings) {
-        
+    public override int Execute(CommandContext context, Settings settings)
+    {
         return 0;
     }
 }
