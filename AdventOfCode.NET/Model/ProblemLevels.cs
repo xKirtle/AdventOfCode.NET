@@ -2,7 +2,7 @@
 
 public enum ProblemLevel
 {
+    Finished,
     PartOne,
-    PartTwo,
-    Finished
+    PartTwo
 }
