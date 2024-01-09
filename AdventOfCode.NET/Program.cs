@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using AdventOfCode.NET;
 using AdventOfCode.NET.Commands;
 using AdventOfCode.NET.DependencyInjection;
 using AdventOfCode.NET.Services;
@@ -10,6 +11,7 @@ using Spectre.Console.Cli;
 
 var serviceCollection = new ServiceCollection();
 serviceCollection.AddSingleton<IHttpService, HttpService>();
+serviceCollection.AddSingleton<IProblemService, ProblemService>();
 
 var registrar = new TypeRegistrar(serviceCollection);
 var app = new CommandApp(registrar);
@@ -24,7 +26,13 @@ app.Configure(config =>
 
     // Override the default exception handler and only print the exception message, assuming it's already in markup.
     config.SetExceptionHandler(ex => {
-        AnsiConsole.MarkupLine(ex.Message);
+        // TODO: Add logger here
+        
+        if (ex is AoCException)
+            AnsiConsole.MarkupLine(ex.Message);
+        else if (ex.InnerException is AoCException)
+            AnsiConsole.MarkupLine(ex.InnerException.Message);
+        
         return 1;
     });
 });

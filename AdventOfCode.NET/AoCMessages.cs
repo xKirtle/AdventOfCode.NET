@@ -23,17 +23,19 @@ internal static class AoCMessages
         $"[blue]{defaultBranch}[/] saved as the default branch.";
     
     public static string InfoFetchingContent(string url) => $"Fetching content from [blue]{url}[/]...";
-    
-    public static string HttpErrorFetchingContent(string url, int statusCode, string? reason) => 
+
+    public static string HttpErrorFetchingContent(string url, int statusCode, string? reason) =>
         $"[red]Error fetching content from {url}[/]. HTTP status code: [red]{statusCode}[/]. Reason: [blue]{reason}[/].";
 
     public static string HttpErrorFetchingContent(string url) =>
         $"[red]Unknown error fetching content from {url}[/].";
-    
-    public static string ErrorProblemNodeNotFound => "[red]Error fetching problem node.[/] Please check your session token and try again.";
-    
-    public static string ErrorProblemInputInvalid => "[red]Error fetching problem input.[/] Please check your session token and try again.";
-    
+
+    public static string ErrorProblemNodeNotFound =>
+        "[red]Error parsing problem node.[/] Could not find the problem node in the HTML document.";
+
+    public static string ErrorProblemLevelInvalid =>
+        "[red]Error parsing problem level.[/] Could not parse the problem level from the HTML document.";
+
     public static string HttpErrorSubmittingSolution(string url, int statusCode, string? reason) =>
         $"[red]Error submitting solution to {url}[/]. HTTP status code: [red]{statusCode}[/]. Reason: [blue]{reason}[/].";
     
@@ -42,4 +44,15 @@ internal static class AoCMessages
     
     public static string WarningSubmittingSolutionInvalidLevel(string level) =>
         $"[yellow]Warning: [/]Invalid problem level: [yellow]{level}[/]. Expected '1' or '2'. Skipping submission...";
+
+    public static string InfoCreatingProblemDirectory(string path) =>
+        $"Creating problem directory at [blue]{path}[/]...";
+
+    public static string InfoCreatingProblemFile(string path) => $"Creating problem file at [blue]{path}[/]...";
+
+    public static string WarningPromptCreatingProblemFileOverriding(string path) =>
+        $"[yellow]Warning: [/]File already exists at [yellow]{path}[/]. Overwrite? [green](y/n)[/] ";
+    
+    public static string InfoCreatingProblemFileOverridingSkipped(string path) =>
+        $"[yellow]Skipping creation of file at [yellow]{path}[/]...";
 }
