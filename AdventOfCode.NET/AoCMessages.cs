@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode.NET;
+﻿using AdventOfCode.NET.Services;
+
+namespace AdventOfCode.NET;
 
 /// <summary>
 /// Messages used throughout the application formatted with Spectre.Console markup.
@@ -15,9 +17,6 @@ internal static class AoCMessages
     
     public static string SuccessSessionTokenSaved(string session) =>
         $"[blue]{session[..4]}...{session[^4..]}[/] saved as the session token.";
-    
-    public static string SuccessRemoteNameSaved(string remoteName) =>
-        $"[blue]{remoteName}[/] saved as the remote name.";
     
     public static string SuccessDefaultBranchSaved(string defaultBranch) =>
         $"[blue]{defaultBranch}[/] saved as the default branch.";
@@ -98,5 +97,72 @@ internal static class AoCMessages
         $"""
          [red]Error: [/]Could not checkout branch [blue]{branchName}[/].
          [yellow]Aborting Git setup...[/]
+         """;
+    
+    public static string ErrorMultipleProblemsFound(int year, int day) =>
+        $"""
+         [red]Error: [/]Multiple problem solutions found for Y{year}D{day}.
+         Please ensure only one class is marked with [blue]AoCSolutionAttribute[/] for each day.
+         """;
+    
+    public static string ErrorNoProblemFound(int year, int day) =>
+        $"""
+         [red]Error: [/]No problem solution found for Y{year}D{day}.
+         Please ensure a class is marked with [blue]AoCSolutionAttribute[/] for each day.
+         """;
+    
+    public static string ErrorSolutionInstantiationFailed(int year, int day) =>
+        $"""
+         [red]Error: [/]Could not instantiate solution for Y{year}D{day}.
+         Please ensure the solution class has a public parameterless constructor.
+         """;
+    
+    public static string WarningNoTestsDirectoryFound(int year, int day) =>
+        $"""
+         [yellow]Warning: [/]No tests directory found for Y{year}D{day}.
+         [yellow]Skipping test execution...[/]
+         """;
+    
+    public static string ErrorInvalidTestCase(string filePath) =>
+        $"""
+         [red]Error: [/]Invalid test case file: [blue]{filePath}[/].
+         Please ensure the test case file follows the template:
+         {ProblemService.GetProblemTestTemplate}
+         """;
+    
+    public static string ErrorParsingTestCasePart(string filePath) =>
+        $"""
+         [red]Error: [/]Could not parse problem part from test case file: [blue]{filePath}[/].
+         Please ensure the test case file follows the template:
+         {ProblemService.GetProblemTestTemplate}
+         """;
+    
+    public static string ErrorParsingTestCaseInput(string filePath) =>
+        $"""
+         [red]Error: [/]Could not parse problem input from test case file: [blue]{filePath}[/].
+         Please ensure the test case file follows the template:
+         {ProblemService.GetProblemTestTemplate}
+         """;
+    
+    public static string ErrorParsingTestCaseOutput(string filePath) =>
+        $"""
+         [red]Error: [/]Could not parse problem output from test case file: [blue]{filePath}[/].
+         Please ensure the test case file follows the template:
+         {ProblemService.GetProblemTestTemplate}
+         """;
+    
+    public static string ErrorTestCaseFailed(string filePath, string expected, string actual) =>
+        $"""
+         [red]Error: [/]Test failed for [blue]{filePath}[/].
+         Expected [blue]{expected}[/], but got [blue]{actual}[/] instead.
+         """;
+    
+    public static string SuccessTestCasePassed(string filePath, long time, string timeColorTag) =>
+        $"Test passed for [blue]{filePath}[/] in [{timeColorTag}]{time}ms[/].";
+    
+    public static string ErrorProblemSolutionIsNull(string filePath) =>
+        $"""
+         [red]Error: [/]Problem solution for test [blue]{filePath}[/] is [yellow]null[/].
+         Please ensure the solution does not return a nullable value.
          """;
 }

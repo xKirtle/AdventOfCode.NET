@@ -121,11 +121,17 @@ internal class ProblemService : IProblemService
         );
     }
     
-    public static string GetOrCreateProblemDirectory(int year, int day, bool includeTest = false) {
+    public static string GetProblemDirectory(int year, int day, bool includeTest = false) {
         var problemPath = Path.Combine(year.ToString(), $"Day{day:00}");
 
         if (includeTest)
             problemPath = Path.Combine(problemPath, "test");
+        
+        return problemPath;
+    }
+    
+    private static string GetOrCreateProblemDirectory(int year, int day, bool includeTest = false) {
+        var problemPath = GetProblemDirectory(year, day, includeTest);
         
         // ReSharper disable once InvertIf
         if (!Directory.Exists(problemPath)) {
@@ -175,9 +181,9 @@ internal class ProblemService : IProblemService
 
           """;
     
-    private static string GetProblemTestTemplate => 
+    public static string GetProblemTestTemplate => 
         """
-        Part: [one/two]
+        Part: one/two
         Input:
         # Your test input goes here
         # and also here, if multiline

@@ -12,6 +12,7 @@ using Spectre.Console.Cli;
 var serviceCollection = new ServiceCollection();
 serviceCollection.AddSingleton<IHttpService, HttpService>();
 serviceCollection.AddSingleton<IProblemService, ProblemService>();
+serviceCollection.AddSingleton<ISolverService, SolverService>();
 
 var registrar = new TypeRegistrar(serviceCollection);
 var app = new CommandApp(registrar);
@@ -23,6 +24,9 @@ app.Configure(config =>
 
     config.AddCommand<SetupCommand>("setup")
         .WithDescription("Setup a new problem.");
+    
+    config.AddCommand<SolveCommand>("solve")
+        .WithDescription("Solve a problem's test cases.");
 
     // Override the default exception handler and only print the exception message, assuming it's already in markup.
     config.SetExceptionHandler(ex => {

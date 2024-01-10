@@ -21,7 +21,7 @@ internal sealed class SetupCommand(IHttpService httpService, IProblemService pro
         var problemInput = httpService.FetchProblemInputAsync(settings.Year, settings.Day).GetAwaiter().GetResult();
         var problemModel = problemService.ParseProblem(settings.Year, settings.Day, problemNode, problemInput);
         
-        problemService.SetupProblemFiles(problemModel);
+        problemService.SetupProblemFiles(problemModel).GetAwaiter().GetResult();
         
         if (!settings.NoGit)
             problemService.SetupGitForProblem(settings.Year, settings.Day);
