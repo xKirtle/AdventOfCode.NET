@@ -37,7 +37,7 @@ internal class ProblemService : IProblemService
             CreateProblemFile(problem.Year, problem.Day, "README.md", problem.ContentMarkdown),
             CreateProblemFile(problem.Year, problem.Day, "problem.in", string.Join(Environment.NewLine, problem.Input)),
             CreateProblemFile(problem.Year, problem.Day, "Solution.cs", GetSolutionTemplate(problem.Year, problem.Day)),
-            CreateProblemFile(problem.Year, problem.Day, "test.aoc", GetProblemTestTemplate(), isTestFile: true)
+            CreateProblemFile(problem.Year, problem.Day, "test.aoc", GetProblemTestTemplate, isTestFile: true)
         };
 
         var answers = problem.Answers.ToArray();
@@ -49,7 +49,12 @@ internal class ProblemService : IProblemService
     }
 
     public void SetupGitForProblem(int year, int day) {
-        using var repo = new Repository(".git");
+        var pathToRepo = Repository.Discover(".\\");
+        
+        if (string.IsNullOrEmpty(pathToRepo))
+            throw new AoCException(AoCMessages.ErrorGitRepositoryNotFound);
+        
+        using var repo = new Repository(pathToRepo);
         var defaultBranch = GitHelpers.GetGitDefaultBranch(repo);
         
         var newProblemBranchName = $"problem/{year}/day/{day}";
@@ -126,8 +131,10 @@ internal class ProblemService : IProblemService
             AnsiConsole.Markup(AoCMessages.WarningPromptCreatingProblemFileOverriding(filePath));
             var keyInfo = AnsiConsole.Console.Input.ReadKey(true);
             
-            if (keyInfo != null && keyInfo.Value.Key != ConsoleKey.Y)
+            if (keyInfo is { Key: not ConsoleKey.Y and not ConsoleKey.Enter })
                 throw new AoCException(AoCMessages.InfoCreatingProblemFileOverridingSkipped(filePath));
+            
+            AnsiConsole.MarkupLine(string.Empty);
         }
 
         AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemFile(filePath));
@@ -140,7 +147,7 @@ internal class ProblemService : IProblemService
         $$"""
           using AdventOfCode.NET.Model;
 
-          namespace AdventOfCode.NET.Problems.Y{{year}}.Day{{day:00}};
+          namespace AdventOfCode.NET.Y{{year}}.Day{{day:00}};
 
           [AoCSolution({{year}}, {{day:00}})]
           public class Solution : ISolver
@@ -156,7 +163,7 @@ internal class ProblemService : IProblemService
 
           """;
     
-    private static string GetProblemTestTemplate() => 
+    private static string GetProblemTestTemplate => 
         """
         Part: [one/two]
         Input:

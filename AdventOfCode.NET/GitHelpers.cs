@@ -22,7 +22,7 @@ internal static class GitHelpers
     public static Branch? GetGitBranch(Repository repository, string branchName) {
         return repository.Branches[branchName];
     }
-
+    
     public static Branch CreateGitBranch(Repository repository, string branchName, Commit commit) {
         return repository.Branches.Add(branchName, commit, allowOverwrite: true);
     }

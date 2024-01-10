@@ -51,7 +51,7 @@ internal static class AoCMessages
     public static string InfoCreatingProblemFile(string path) => $"Creating problem file at [blue]{path}[/]...";
 
     public static string WarningPromptCreatingProblemFileOverriding(string path) =>
-        $"[yellow]Warning: [/]File already exists at [yellow]{path}[/]. Overwrite? [green](y/n)[/] ";
+        $"[yellow]Warning: [/]File already exists at [yellow]{path}[/]. Overwrite? [green](Y/n)[/] ";
     
     public static string InfoCreatingProblemFileOverridingSkipped(string path) =>
         $"[yellow]Skipping creation of file at [yellow]{path}[/]...";
@@ -69,4 +69,7 @@ internal static class AoCMessages
 
     public static string ErrorGitAuthorNotFound =>
         "[red]Error: [/]Author information not found in global Git configuration. Please set your name and email with 'git config --global user.name \"Your Name\"' and 'git config --global user.email \"";
+    
+    public static string ErrorGitRepositoryNotFound =>
+        "[red]Error: [/]Could not find a Git repository. Please run this command from the root of your repository.";
 }
