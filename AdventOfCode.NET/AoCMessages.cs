@@ -1,4 +1,5 @@
-﻿using AdventOfCode.NET.Services;
+﻿using AdventOfCode.NET.Model;
+using AdventOfCode.NET.Services;
 
 namespace AdventOfCode.NET;
 
@@ -160,9 +161,12 @@ internal static class AoCMessages
     public static string SuccessTestCasePassed(string filePath, long time, string timeColorTag) =>
         $"Test passed for [blue]{filePath}[/] in [{timeColorTag}]{time}ms[/].";
     
-    public static string ErrorProblemSolutionIsNull(string filePath) =>
+    public static string ErrorProblemSolutionIsNull(int year, int day, ProblemLevel level) =>
         $"""
-         [red]Error: [/]Problem solution for test [blue]{filePath}[/] is [yellow]null[/].
+         [red]Error: [/]Solution for Y{year}D{day} part {(level == ProblemLevel.PartOne ? "one" : "two")} is [yellow]null[/].
          Please ensure the solution does not return a nullable value.
          """;
+    
+    public static string WarningProblemAlreadySolved(int year, int day) =>
+        $"[yellow]Warning: [/]Problem Y{year}D{day} is already solved in AoC. Skipping submission...";
 }

@@ -8,13 +8,12 @@ namespace AdventOfCode.NET.Services;
 internal interface ISolverService
 {
     Task<bool> TrySolveProblemTests(int year, int day);
+    object GetSolutionResult(int year, int day, ProblemLevel level, string input);
 }
 
 internal class SolverService : ISolverService
 {
-    public async Task<bool> TrySolveProblemTests(int year, int day)
-    {
-        var solver = ISolver.GetSolverInstance(year, day);
+    public async Task<bool> TrySolveProblemTests(int year, int day) {
         var problemTestPath = ProblemService.GetProblemDirectory(year, day, includeTest: true);
 
         if (!Directory.Exists(problemTestPath)) {
@@ -26,19 +25,10 @@ internal class SolverService : ISolverService
         foreach (var filePath in Directory.GetFiles(problemTestPath, "*.aoc")) {
             var testStartTime = sw.ElapsedMilliseconds;
             var testCase = await ParseTestCase(filePath);
-            
-            // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-            var result = testCase.Level switch {
-                ProblemLevel.PartOne => solver.PartOne(testCase.Input),
-                ProblemLevel.PartTwo => solver.PartTwo(testCase.Input),
-                _ => throw new UnreachableException($"Invalid problem level value: {testCase.Level}")
-            };
 
-            if (result == null) {
-                throw new AoCException(AoCMessages.ErrorProblemSolutionIsNull(filePath));
-            }
-
+            var result = GetSolutionResult(year, day, testCase.Level, testCase.Input);
             var testTotalTime = sw.ElapsedMilliseconds - testStartTime;
+            
             var colorTag = testTotalTime switch {
                 > 1000 => "red",
                 > 500 => "yellow",
@@ -56,8 +46,24 @@ internal class SolverService : ISolverService
         return true;
     }
 
-    private static async Task<ProblemTestCase> ParseTestCase(string filePath)
-    {
+    public object GetSolutionResult(int year, int day, ProblemLevel level, string input) {
+        var solver = ISolver.GetSolverInstance(year, day);
+        
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var result = level switch {
+            ProblemLevel.PartOne => solver.PartOne(input),
+            ProblemLevel.PartTwo => solver.PartTwo(input),
+            _ => throw new UnreachableException($"Invalid problem level value: {level}")
+        };
+        
+        if (result == null) {
+            throw new AoCException(AoCMessages.ErrorProblemSolutionIsNull(year, day, level));
+        }
+        
+        return result;
+    }
+
+    private static async Task<ProblemTestCase> ParseTestCase(string filePath) {
         var fileContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
         var testParts = fileContent.Split(["Part:", "Input:", "Output:"], StringSplitOptions.RemoveEmptyEntries);
 

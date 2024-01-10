@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 using AdventOfCode.NET.Model;
 using HtmlAgilityPack;
 using Spectre.Console;
@@ -8,8 +11,9 @@ namespace AdventOfCode.NET.Services;
 internal interface IHttpService
 {
     Task<HtmlNode> FetchProblemAsync(int year, int day);
-    Task<string[]> FetchProblemInputAsync(int year, int day);
+    Task<string> FetchProblemInputAsync(int year, int day);
     Task<HtmlNode> SubmitSolutionAsync(int year, int day, ProblemLevel level, string answer);
+    string ParseSubmissionResponse(HtmlNode responseDocument);
 }
 
 internal class HttpService : IHttpService
@@ -37,9 +41,11 @@ internal class HttpService : IHttpService
         return htmlDoc.DocumentNode;
     }
 
-    public async Task<string[]> FetchProblemInputAsync(int year, int day) {
+    public async Task<string> FetchProblemInputAsync(int year, int day) {
         var content = await FetchContentAsync($"{year}/day/{day}/input");
-        return content.Split(["\r\n", "\n"], StringSplitOptions.None);
+        
+        // Standardize to LF, then replace LF with Environment.NewLine
+        return content.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
     }
 
     public async Task<HtmlNode> SubmitSolutionAsync(int year, int day, ProblemLevel level, string answer) {
@@ -112,5 +118,41 @@ internal class HttpService : IHttpService
         }
 
         return await response.Content.ReadAsStringAsync();
+    }
+    
+    [SuppressMessage("Performance", "SYSLIB1045:Convert to \'GeneratedRegexAttribute\'.")]
+    public string ParseSubmissionResponse(HtmlNode responseDocument) {
+        var sb = new StringBuilder();
+        var responseNode = responseDocument.SelectSingleNode("//article//p[1]");
+
+        if (responseNode?.ChildNodes?.Any(child => child.HasClass("day-success")) ?? false) {
+            sb.Append("That's the right answer!");
+            
+            var daySuccessNode = responseDocument.SelectSingleNode("//article//p[2]");
+            if (daySuccessNode == null) 
+                return sb.ToString();
+            
+            var match = Regex.Match(daySuccessNode.InnerText, "You have completed Day \\d+!");
+            if (match.Success)
+                sb.Append(' ').Append(match.Groups[0].Value);
+        }
+        else {
+            // Removing the [Return to Day X] link at the end of the error message
+            var errorMessage = responseNode?.InnerText?.Split('[')[0].Trim() ?? "Unknown error!";
+
+            var match = Regex.Match(errorMessage, "[Pp]lease wait (.*?) before trying again");
+            if (match.Success) {
+                errorMessage = errorMessage.Replace(match.Groups[1].Value, "[red]" + match.Groups[1].Value + "[/]");
+            }
+
+            match = Regex.Match(errorMessage, "have ((?:(?!to wait).)*?) left to wait");
+            if (match.Success) {
+                errorMessage = errorMessage.Replace(match.Groups[1].Value, "[red]" + match.Groups[1].Value + "[/]");
+            }
+            
+            sb.Append(errorMessage);
+        }
+        
+        return sb.Replace("  ", " ").ToString();
     }
 }

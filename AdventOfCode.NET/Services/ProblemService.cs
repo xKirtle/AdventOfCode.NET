@@ -8,7 +8,7 @@ namespace AdventOfCode.NET.Services;
 
 internal interface IProblemService
 {
-    Problem ParseProblem(int year, int day, HtmlNode problemNode, string[] problemInput);
+    Problem ParseProblem(int year, int day, HtmlNode problemNode, string problemInput);
     Task SetupProblemFiles(Problem problem);
     void SetupGitForProblem(int year, int day);
     ProblemLevel ParseProblemLevel(HtmlNode problemNode);
@@ -17,7 +17,7 @@ internal interface IProblemService
 
 internal class ProblemService : IProblemService
 {
-    public Problem ParseProblem(int year, int day, HtmlNode problemNode, string[] problemInput) {
+    public Problem ParseProblem(int year, int day, HtmlNode problemNode, string problemInput) {
         // Extract logic to parse problem's markdown to its own method?
         var contentMarkdownStringBuilder = new StringBuilder();
         foreach (var article in problemNode.SelectNodes("//article")) {
@@ -35,13 +35,14 @@ internal class ProblemService : IProblemService
     public async Task SetupProblemFiles(Problem problem) {
         var tasks = new List<Task> {
             CreateProblemFile(problem.Year, problem.Day, "README.md", problem.ContentMarkdown),
-            CreateProblemFile(problem.Year, problem.Day, "problem.in", string.Join(Environment.NewLine, problem.Input)),
+            CreateProblemFile(problem.Year, problem.Day, "problem.in", problem.Input),
             CreateProblemFile(problem.Year, problem.Day, "Solution.cs", GetSolutionTemplate(problem.Year, problem.Day)),
             CreateProblemFile(problem.Year, problem.Day, "test.aoc", GetProblemTestTemplate, isTestFile: true)
         };
 
         var answers = problem.Answers.ToArray();
         if (answers.Length > 0) {
+            // TODO: Reconsider design choice of keeping a problem.out, instead of the already existing test case solution
             tasks.Add(CreateProblemFile(problem.Year, problem.Day, "problem.out", string.Join(Environment.NewLine, answers)));
         }
 

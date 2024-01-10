@@ -2,10 +2,21 @@
 
 public interface ISolver
 {
+    /// <summary>
+    /// Solves the first part of the problem.
+    /// </summary>
+    /// <param name="input">A string that uses <see cref="Environment.NewLine"/> as line endings.</param>
+    /// <returns>Non nullable <see cref="object"/></returns>
     public object PartOne(string input);
+    
+    /// <summary>
+    /// Solves the first part of the problem.
+    /// </summary>
+    /// <param name="input">A string that uses <see cref="Environment.NewLine"/> as line endings.</param>
+    /// <returns>Non nullable <see cref="object"/></returns>
     public object PartTwo(string input);
     
-    public static ISolver GetSolverInstance(int year, int day) {
+    internal static ISolver GetSolverInstance(int year, int day) {
         Type? foundType = null;
 
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
