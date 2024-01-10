@@ -26,12 +26,14 @@ app.Configure(config =>
 
     // Override the default exception handler and only print the exception message, assuming it's already in markup.
     config.SetExceptionHandler(ex => {
-        // TODO: Add logger here
-        
         if (ex is AoCException)
             AnsiConsole.MarkupLine(ex.Message);
         else if (ex.InnerException is AoCException)
             AnsiConsole.MarkupLine(ex.InnerException.Message);
+        else
+        {
+            // Log all exceptions not thrown by AdventOfCode.NET
+        }
         
         return 1;
     });

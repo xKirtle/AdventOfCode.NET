@@ -63,8 +63,14 @@ internal class ProblemService : IProblemService
         var isNewBranch = newProblemBranch == null;
         if (newProblemBranch == null)
             newProblemBranch = GitHelpers.CreateGitBranch(repo, newProblemBranchName, defaultBranch.Tip);
-        
-        LibGit2Sharp.Commands.Checkout(repo, newProblemBranch);
+
+        try {
+            LibGit2Sharp.Commands.Checkout(repo, newProblemBranch);
+        }
+        catch (Exception e)
+        {
+            // TODO: Handle exception
+        }
 
         if (isNewBranch) {
             LibGit2Sharp.Commands.Stage(repo, year.ToString());
