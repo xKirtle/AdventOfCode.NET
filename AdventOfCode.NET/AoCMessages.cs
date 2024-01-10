@@ -43,7 +43,10 @@ internal static class AoCMessages
         $"[red]Unknown error submitting solution to {url}[/].";
     
     public static string WarningSubmittingSolutionInvalidLevel(string level) =>
-        $"[yellow]Warning: [/]Invalid problem level: [yellow]{level}[/]. Expected '1' or '2'. Skipping submission...";
+        $"""
+         [yellow]Warning: [/]Invalid problem level: [yellow]{level}[/]. Expected '1' or '2'.
+         Skipping submission...
+         """;
 
     public static string InfoCreatingProblemDirectory(string path) =>
         $"Creating problem directory at [blue]{path}[/]...";
@@ -55,21 +58,45 @@ internal static class AoCMessages
     
     public static string InfoCreatingProblemFileOverridingSkipped(string path) =>
         $"[yellow]Skipping creation of file at [yellow]{path}[/]...";
-    
-    public static string ErrorGitRemoteNotFound(string remoteName) =>
-        $"[red]Error: [/]Remote [blue]{remoteName}[/] not found. Please set the AOC_GIT_REMOTE_NAME environment variable with the name of your remote.";
-    
+
     public static string ErrorGitDefaultBranchNotFound(string defaultBranchName) =>
-        $"[red]Error: [/]Default branch [blue]{defaultBranchName}[/] not found. Please set the AOC_GIT_DEFAULT_BRANCH environment variable with the name of your default branch.";
+        $"""
+         [red]Error: [/]Default branch [blue]{defaultBranchName}[/] not found.
+         Please set the AOC_GIT_DEFAULT_BRANCH environment variable with the name of your default branch.";
+         """;
     
     public static string WarningGitProblemBranchAlreadyExists(string branchName) =>
-        $"[yellow]Warning: [/]Branch [yellow]{branchName}[/] already exists. Skipping git setup.";
+        $"""
+         [yellow]Warning: [/]Branch [yellow]{branchName}[/] already exists.
+         [yellow]Skipping Git setup...[/]
+         """;
     
     public static string InfoGitCommitMessage(int year, int day) => $"Initial commit for Y{year}D{day}";
 
     public static string ErrorGitAuthorNotFound =>
-        "[red]Error: [/]Author information not found in global Git configuration. Please set your name and email with 'git config --global user.name \"Your Name\"' and 'git config --global user.email \"";
+        """
+        [red]Error: [/]Author information not found in global Git configuration.
+        Please set your name and email with 'git config --global user.name \"Your Name\"' and 'git config --global user.email \".
+        [yellow]Aborting Git setup...[/]
+        """;
     
     public static string ErrorGitRepositoryNotFound =>
-        "[red]Error: [/]Could not find a Git repository. Please run this command from the root of your repository.";
+        """
+        [red]Error: [/]Could not find a Git repository. Please run this command from the root of your repository.
+        [yellow]Aborting Git setup...[/]
+        """;
+    
+    public static string ErrorGitRepositoryNotClean =>
+        """
+        [red]Error: [/]Git repository is not clean. 
+        Please commit or stash your changes before running this command.
+        Alternatively, you can use the [blue]--no-git[/] flag to skip Git setup.
+        [yellow]Aborting Git setup...[/]
+        """;
+    
+    public static string ErrorGitCheckoutFailed(string branchName) =>
+        $"""
+         [red]Error: [/]Could not checkout branch [blue]{branchName}[/].
+         [yellow]Aborting Git setup...[/]
+         """;
 }

@@ -67,18 +67,24 @@ internal class ProblemService : IProblemService
         try {
             LibGit2Sharp.Commands.Checkout(repo, newProblemBranch);
         }
-        catch (Exception e)
-        {
-            // TODO: Handle exception
+        catch (CheckoutConflictException ex) {
+            GitHelpers.TryDeleteGitBranch(repo, newProblemBranchName);
+            throw new AoCException(AoCMessages.ErrorGitRepositoryNotClean, ex);
+        }
+        catch (Exception ex) {
+            GitHelpers.TryDeleteGitBranch(repo, newProblemBranchName);
+            throw new AoCException(AoCMessages.ErrorGitCheckoutFailed(newProblemBranchName), ex);
         }
 
         if (isNewBranch) {
             LibGit2Sharp.Commands.Stage(repo, year.ToString());
             var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
 
-            if (signature == null)
+            if (signature == null) {
+                GitHelpers.TryDeleteGitBranch(repo, newProblemBranchName);
                 throw new AoCException(AoCMessages.ErrorGitAuthorNotFound);
-            
+            }
+
             var commitMessage = AoCMessages.InfoGitCommitMessage(year, day);
             repo.Commit(commitMessage, signature, signature);
         }
@@ -136,11 +142,11 @@ internal class ProblemService : IProblemService
         if (File.Exists(filePath)) {
             AnsiConsole.Markup(AoCMessages.WarningPromptCreatingProblemFileOverriding(filePath));
             var keyInfo = AnsiConsole.Console.Input.ReadKey(true);
+            AnsiConsole.MarkupLine(string.Empty);
             
             if (keyInfo is { Key: not ConsoleKey.Y and not ConsoleKey.Enter })
                 throw new AoCException(AoCMessages.InfoCreatingProblemFileOverridingSkipped(filePath));
             
-            AnsiConsole.MarkupLine(string.Empty);
         }
 
         AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemFile(filePath));

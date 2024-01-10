@@ -26,4 +26,12 @@ internal static class GitHelpers
     public static Branch CreateGitBranch(Repository repository, string branchName, Commit commit) {
         return repository.Branches.Add(branchName, commit, allowOverwrite: true);
     }
+    
+    public static void TryDeleteGitBranch(Repository repository, string branchName) {
+        var branch = GetGitBranch(repository, branchName);
+        if (branch == null)
+            return;
+        
+        repository.Branches.Remove(branch);
+    }
 }
