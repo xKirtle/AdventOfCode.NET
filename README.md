@@ -1,7 +1,6 @@
 ﻿# Program architecture design
 
 All things are subject to be changed during development.
-___
 
 ## Commands
 
@@ -11,7 +10,6 @@ Two notations are used: `<argument>` and `[argument]`.
 - `[argument]` means the argument is **optional**
 
 `[-a | --argument]` might also appear, this means that the command can be called by either its short or long format.
-___
 
 ### Initialize [init]
 
@@ -19,9 +17,7 @@ Initialize any values required by the application.
 - `<session>`
   - AoC session token.
 - `[-b | --branch]`
-  - Default values include `main` and `master`. If you use another name, set it with this argument.
-- `[-r | --remote]`
-  - Default values include `origin` and `upstream`. If you use another name, set it with this argument.
+  - Default value is `master`. If you use another name, set it with this argument.
 
 
 ### Setup [setup]
@@ -44,8 +40,6 @@ Attempt to solve a problem's solution. Before submiting an answer to Advent of C
 Clear plan of where each bit of logic should be and how it can be grouped in a service.
 Essentially just planning the interfaces of what each service should accomplish.
 
-___
-
 ### HTTP Service
 
 Should handle any HTTP related request to `https://adventofcode.com`. 
@@ -56,7 +50,7 @@ Functionality includes:
 - Fetching a problem's input
 - Fetching a problem's level (which part is currently being solved)
 - Fetching a problem's solution in a specific level (null if not yet solved)
-- Submiting a solution to a level
+- Submitting a solution to a level
 
 ### Problem Service
 
@@ -76,6 +70,5 @@ Functionality includes:
 Should handle anything related to a problem's test cases (and potentially benchmarking the solution?).
 
 Functionality includes:
-- Creating an example test case (sadly, examples cannot be easily parsed from AoC's HTML, unless we hardcode them from past years)
 - Solving a problem's test cases
 - Benchmarking a solution?

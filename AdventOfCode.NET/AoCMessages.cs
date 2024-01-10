@@ -55,4 +55,18 @@ internal static class AoCMessages
     
     public static string InfoCreatingProblemFileOverridingSkipped(string path) =>
         $"[yellow]Skipping creation of file at [yellow]{path}[/]...";
+    
+    public static string ErrorGitRemoteNotFound(string remoteName) =>
+        $"[red]Error: [/]Remote [blue]{remoteName}[/] not found. Please set the AOC_GIT_REMOTE_NAME environment variable with the name of your remote.";
+    
+    public static string ErrorGitDefaultBranchNotFound(string defaultBranchName) =>
+        $"[red]Error: [/]Default branch [blue]{defaultBranchName}[/] not found. Please set the AOC_GIT_DEFAULT_BRANCH environment variable with the name of your default branch.";
+    
+    public static string WarningGitProblemBranchAlreadyExists(string branchName) =>
+        $"[yellow]Warning: [/]Branch [yellow]{branchName}[/] already exists. Skipping git setup.";
+    
+    public static string InfoGitCommitMessage(int year, int day) => $"Initial commit for Y{year}D{day}";
+
+    public static string ErrorGitAuthorNotFound =>
+        "[red]Error: [/]Author information not found in global Git configuration. Please set your name and email with 'git config --global user.name \"Your Name\"' and 'git config --global user.email \"";
 }

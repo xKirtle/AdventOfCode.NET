@@ -13,11 +13,6 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
         [Description("AoC session token.")]
         [CommandArgument(0, "<session>")]
         public required string Session { get; init; } = null!;
-        
-        [Description("Your repository's remote branch")]
-        [CommandOption("-r|--remote")]
-        [DefaultValue("origin")]
-        public required string RemoteName { get; init; } = null!;
 
         [Description("Your repostiroy's default branch")]
         [CommandOption("-b|--branch")]
@@ -34,12 +29,6 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
             AnsiConsole.MarkupLine(AoCMessages.SuccessSessionTokenSaved(settings.Session));
             Environment.SetEnvironmentVariable("AOC_SESSION_COOKIE", settings.Session, EnvironmentVariableTarget.User);
         }
-
-        var previousRemoteName = Environment.GetEnvironmentVariable("AOC_GIT_REMOTE_NAME", EnvironmentVariableTarget.User);
-        if (IsValidNewValue(previousRemoteName, settings.RemoteName)) {
-            AnsiConsole.MarkupLine(AoCMessages.SuccessRemoteNameSaved(settings.RemoteName));
-            Environment.SetEnvironmentVariable("AOC_GIT_REMOTE_NAME", settings.RemoteName, EnvironmentVariableTarget.User);
-        }
         
         var previousDefaultBranch = Environment.GetEnvironmentVariable("AOC_GIT_DEFAULT_BRANCH", EnvironmentVariableTarget.User);
         if (IsValidNewValue(previousDefaultBranch, settings.DefaultBranch)) {
@@ -54,7 +43,7 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
         return !string.IsNullOrEmpty(newValue) && newValue != previousValue;
     }
 
-    internal static bool IsValidSessionToken(string session) {
+    private static bool IsValidSessionToken(string session) {
         const string expectedPrefix = "53616c7465645f5f"; // "Salted__" in hex
         const int expectedSize = 128;
         

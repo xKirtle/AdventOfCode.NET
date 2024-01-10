@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using AdventOfCode.NET.Model;
 using HtmlAgilityPack;
+using LibGit2Sharp;
 using Spectre.Console;
 
 namespace AdventOfCode.NET.Services;
@@ -31,19 +32,48 @@ internal class ProblemService : IProblemService
         return new Problem(year, day, level, problemInput, answers, contentMarkdownStringBuilder.ToString());
     }
 
-    public async Task SetupProblemFiles(Problem problem)
-    {
+    public async Task SetupProblemFiles(Problem problem) {
         var tasks = new List<Task> {
             CreateProblemFile(problem.Year, problem.Day, "README.md", problem.ContentMarkdown),
-            CreateProblemFile(problem.Year, problem.Day, "input.aoc", string.Join(Environment.NewLine, problem.Input))
+            CreateProblemFile(problem.Year, problem.Day, "problem.in", string.Join(Environment.NewLine, problem.Input)),
+            CreateProblemFile(problem.Year, problem.Day, "Solution.cs", GetSolutionTemplate(problem.Year, problem.Day)),
+            CreateProblemFile(problem.Year, problem.Day, "test.aoc", GetProblemTestTemplate(), isTestFile: true)
         };
+
+        var answers = problem.Answers.ToArray();
+        if (answers.Length > 0) {
+            tasks.Add(CreateProblemFile(problem.Year, problem.Day, "problem.out", string.Join(Environment.NewLine, answers)));
+        }
 
         await Task.WhenAll(tasks);
     }
 
-    public void SetupGitForProblem(int year, int day)
-    {
-        throw new NotImplementedException();
+    public void SetupGitForProblem(int year, int day) {
+        using var repo = new Repository(".git");
+        var defaultBranch = GitHelpers.GetGitDefaultBranch(repo);
+        
+        var newProblemBranchName = $"problem/{year}/day/{day}";
+        var newProblemBranch = GitHelpers.GetGitBranch(repo, newProblemBranchName);
+        
+        var isNewBranch = newProblemBranch == null;
+        if (newProblemBranch == null)
+            newProblemBranch = GitHelpers.CreateGitBranch(repo, newProblemBranchName, defaultBranch.Tip);
+        
+        LibGit2Sharp.Commands.Checkout(repo, newProblemBranch);
+
+        if (isNewBranch) {
+            LibGit2Sharp.Commands.Stage(repo, year.ToString());
+            var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
+
+            if (signature == null)
+                throw new AoCException(AoCMessages.ErrorGitAuthorNotFound);
+            
+            var commitMessage = AoCMessages.InfoGitCommitMessage(year, day);
+            repo.Commit(commitMessage, signature, signature);
+        }
+        else {
+            AnsiConsole.MarkupLine(AoCMessages.WarningGitProblemBranchAlreadyExists(newProblemBranchName));
+        }
     }
     
     public ProblemLevel ParseProblemLevel(HtmlNode problemNode) {
@@ -74,9 +104,12 @@ internal class ProblemService : IProblemService
         );
     }
     
-    public static string GetOrCreateProblemDirectory(int year, int day) {
+    public static string GetOrCreateProblemDirectory(int year, int day, bool includeTest = false) {
         var problemPath = Path.Combine(year.ToString(), $"Day{day:00}");
 
+        if (includeTest)
+            problemPath = Path.Combine(problemPath, "test");
+        
         // ReSharper disable once InvertIf
         if (!Directory.Exists(problemPath)) {
             AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemDirectory(problemPath));
@@ -86,8 +119,8 @@ internal class ProblemService : IProblemService
         return problemPath;
     }
     
-    public static async Task<string> CreateProblemFile(int year, int day, string fileNameWithExtension, string fileContent) {
-        var filePath = Path.Combine(GetOrCreateProblemDirectory(year, day), fileNameWithExtension);
+    private static async Task<string> CreateProblemFile(int year, int day, string fileNameWithExtension, string fileContent, bool isTestFile = false) {
+        var filePath = Path.Combine(GetOrCreateProblemDirectory(year, day, isTestFile), fileNameWithExtension);
 
         if (File.Exists(filePath)) {
             AnsiConsole.Markup(AoCMessages.WarningPromptCreatingProblemFileOverriding(filePath));
@@ -102,4 +135,34 @@ internal class ProblemService : IProblemService
 
         return filePath;
     }
+    
+    private static string GetSolutionTemplate(int year, int day) => 
+        $$"""
+          using AdventOfCode.NET.Model;
+
+          namespace AdventOfCode.NET.Problems.Y{{year}}.Day{{day:00}};
+
+          [AoCSolution({{year}}, {{day:00}})]
+          public class Solution : ISolver
+          {
+              public object PartOne(string input) {
+                  return 0;
+              }
+          
+              public object PartTwo(string input) {
+                  return 0;
+              }
+          }
+
+          """;
+    
+    private static string GetProblemTestTemplate() => 
+        """
+        Part: [one/two]
+        Input:
+        # Your test input goes here
+        # and also here, if multiline
+        Output:
+        # Your expected output goes here
+        """;
 }
