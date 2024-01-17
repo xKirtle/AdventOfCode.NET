@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using AdventOfCode.NET.Services;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace AdventOfCode.NET.Commands;
@@ -22,9 +23,18 @@ internal sealed class SetupCommand(IHttpService httpService, IProblemService pro
         var problemModel = problemService.ParseProblem(settings.Year, settings.Day, problemNode, problemInput);
         
         problemService.SetupProblemFiles(problemModel).GetAwaiter().GetResult();
-        
+
         if (!settings.NoGit)
-            problemService.SetupGitForProblem(settings.Year, settings.Day);
+        {
+            try {
+                problemService.SetupGitForProblem(settings.Year, settings.Day);
+            }
+            catch (Exception ex) {
+                AnsiConsole.MarkupLine(ex.Message);
+            }
+        }
+
+        AnsiConsole.MarkupLine(AoCMessages.SuccessSetupCompleted(settings.Year, settings.Day));
         
         return 0;
     }

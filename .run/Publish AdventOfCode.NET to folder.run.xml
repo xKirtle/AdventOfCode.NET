@@ -1,0 +1,8 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Publish AdventOfCode.NET to folder" type="DotNetFolderPublish" factoryName="Publish to folder">
+    <riderPublish configuration="Release" platform="Any CPU" produce_single_file="true" ready_to_run="true" runtime="win-x64" self_contained="true" target_folder="$PROJECT_DIR$/bin/Release/net8.0/win-x64/publish" target_framework="net8.0" uuid_high="2727473146070781113" uuid_low="-9102865972117558041" />
+    <method v="2">
+      <option name="Build" default="false" projectName="AdventOfCode.NET" projectPath="$PROJECT_DIR$/AdventOfCode.NET.csproj" />
+    </method>
+  </configuration>
+</component>

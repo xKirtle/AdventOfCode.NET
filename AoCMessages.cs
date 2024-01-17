@@ -57,7 +57,7 @@ internal static class AoCMessages
         $"[yellow]Warning: [/]File already exists at [yellow]{path}[/]. Overwrite? [green](Y/n)[/] ";
     
     public static string InfoCreatingProblemFileOverridingSkipped(string path) =>
-        $"[yellow]Skipping creation of file at [yellow]{path}[/]...";
+        $"Skipping creation of file at [blue]{path}[/]...";
 
     public static string ErrorGitDefaultBranchNotFound(string defaultBranchName) =>
         $"""
@@ -82,8 +82,8 @@ internal static class AoCMessages
     
     public static string ErrorGitRepositoryNotFound =>
         """
-        [red]Error: [/]Could not find a Git repository. Please run this command from the root of your repository.
-        [yellow]Aborting Git setup...[/]
+        [red]Error: [/]Could not find a Git repository. Please run this command from the root of your git repository.
+        Aborting Git setup...
         """;
     
     public static string ErrorGitRepositoryNotClean =>
@@ -169,4 +169,7 @@ internal static class AoCMessages
     
     public static string WarningProblemAlreadySolved(int year, int day) =>
         $"[yellow]Warning: [/]Problem Y{year}D{day} is already solved in AoC. Skipping submission...";
+    
+    public static string SuccessSetupCompleted(int year, int day) =>
+        $"[green]Success:[/] Setup completed for [blue]Y{year}/D{day}[/]!";
 }

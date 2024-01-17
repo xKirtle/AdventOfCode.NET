@@ -1,6 +1,23 @@
-﻿# Program architecture design
+﻿# AdventOfCode.NET
 
-All things are subject to be changed during development.
+All things in this document are subject to change during development.
+
+
+## How to setup
+
+Simply call `Startup.InitializeFramework(args)` in your entry point and you're good to go.
+
+## How to use
+
+From your terminal, call `dotnet run` to get a list of commands available.
+
+You must first initialize the application with your AoC session token. This will be stored as an environment variable and used in all requests to AoC servers.
+
+You can do so by calling `dotnet run init <session>`. For example, `dotnet run init 53616c...f37200`.
+
+## Extras
+
+TODO: Mention that Startup.InitializeFramework(args) can return an IServiceCollection that can be used to add your own services to use Dependency Injection with an `out` argument?
 
 ## Commands
 

@@ -150,10 +150,11 @@ internal class ProblemService : IProblemService
             AnsiConsole.Markup(AoCMessages.WarningPromptCreatingProblemFileOverriding(filePath));
             var keyInfo = AnsiConsole.Console.Input.ReadKey(true);
             AnsiConsole.MarkupLine(string.Empty);
-            
-            if (keyInfo is { Key: not ConsoleKey.Y and not ConsoleKey.Enter })
-                throw new AoCException(AoCMessages.InfoCreatingProblemFileOverridingSkipped(filePath));
-            
+
+            if (keyInfo is { Key: not ConsoleKey.Y and not ConsoleKey.Enter }) {
+                AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemFileOverridingSkipped(filePath));
+                return filePath;
+            }
         }
 
         AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemFile(filePath));
