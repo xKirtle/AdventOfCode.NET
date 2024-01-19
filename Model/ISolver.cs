@@ -1,4 +1,5 @@
 ﻿using AdventOfCode.NET.Exceptions;
+using AdventOfCode.NET.Utils;
 
 namespace AdventOfCode.NET.Model;
 

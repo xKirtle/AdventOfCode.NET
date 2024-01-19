@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Model;
+using AdventOfCode.NET.Utils;
 using HtmlAgilityPack;
 using LibGit2Sharp;
 using Spectre.Console;

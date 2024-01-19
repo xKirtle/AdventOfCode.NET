@@ -1,7 +1,7 @@
 ﻿using AdventOfCode.NET.Exceptions;
 using LibGit2Sharp;
 
-namespace AdventOfCode.NET;
+namespace AdventOfCode.NET.Utils;
 
 internal static class GitHelpers
 {

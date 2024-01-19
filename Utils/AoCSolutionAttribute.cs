@@ -1,4 +1,4 @@
-﻿namespace AdventOfCode.NET;
+﻿namespace AdventOfCode.NET.Utils;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class AoCSolutionAttribute(int year, int day) : Attribute

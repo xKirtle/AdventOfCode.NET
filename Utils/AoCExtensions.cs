@@ -4,7 +4,7 @@ using AdventOfCode.NET.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
-namespace AdventOfCode.NET;
+namespace AdventOfCode.NET.Utils;
 
 public static class AoCExtensions
 {
@@ -38,5 +38,4 @@ public static class AoCExtensions
 
         return serviceCollection;
     }
-    
 }
