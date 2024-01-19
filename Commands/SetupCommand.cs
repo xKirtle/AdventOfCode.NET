@@ -8,7 +8,7 @@ using Spectre.Console.Cli;
 namespace AdventOfCode.NET.Commands;
 
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global", Justification = "Instantiated by Spectre.Console.Cli")]
-internal sealed class SetupCommand(IHttpService httpService, IProblemService problemService) : Command<SetupCommand.Settings>
+internal sealed class SetupCommand(IHttpService httpService, IProblemService problemService, IEnvironmentVariablesService envVariablesService) : Command<SetupCommand.Settings>
 {
     public sealed class Settings : DateSettings
     {
@@ -25,8 +25,8 @@ internal sealed class SetupCommand(IHttpService httpService, IProblemService pro
         
         problemService.SetupProblemFiles(problemModel).GetAwaiter().GetResult();
 
-        if (!settings.NoGit)
-        {
+        if (!envVariablesService.NoGit && !settings.NoGit) {
+            // if git setup fails, we still want to continue with the rest of the setup
             try {
                 problemService.SetupGitForProblem(settings.Year, settings.Day);
             }

@@ -175,4 +175,7 @@ internal static class AoCMessages
     
     public static string InfoSessionTokenUnmodified =>
         "New session token is the same as the previous one. Skipping update...";
+    
+    public static string SuccessNoGitSaved(string noGit) =>
+        $"[blue]{noGit}[/] saved as the no-git flag.";
 }

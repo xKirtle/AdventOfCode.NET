@@ -9,6 +9,8 @@ namespace AdventOfCode.NET.Utils;
 public static class AoCExtensions
 {
     public static IServiceCollection AddAdventOfCodeServices(this IServiceCollection services) {
+        services.AddSingleton<IEnvironmentVariablesService, EnvironmentVariablesService>();
+        services.AddSingleton<IGitService, GitService>();
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IProblemService, ProblemService>();
         services.AddSingleton<ISolverService, SolverService>();

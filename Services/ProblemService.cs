@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Model;
-using AdventOfCode.NET.Utils;
 using HtmlAgilityPack;
 using LibGit2Sharp;
 using Spectre.Console;
@@ -13,11 +12,9 @@ internal interface IProblemService
     Problem ParseProblem(int year, int day, HtmlNode problemNode, string problemInput);
     Task SetupProblemFiles(Problem problem);
     void SetupGitForProblem(int year, int day);
-    ProblemLevel ParseProblemLevel(HtmlNode problemNode);
-    ProblemAnswers ParseProblemAnswers(HtmlNode problemNode);
 }
 
-internal class ProblemService : IProblemService
+internal class ProblemService(IGitService gitService) : IProblemService
 {
     public Problem ParseProblem(int year, int day, HtmlNode problemNode, string problemInput) {
         // Extract logic to parse problem's markdown to its own method?
@@ -58,24 +55,24 @@ internal class ProblemService : IProblemService
             throw new AoCException(AoCMessages.ErrorGitRepositoryNotFound);
         
         using var repo = new Repository(pathToRepo);
-        var defaultBranch = GitHelpers.GetGitDefaultBranch(repo);
+        var defaultBranch = gitService.GetGitDefaultBranch(repo);
         
         var newProblemBranchName = $"problem/{year}/day/{day}";
-        var newProblemBranch = GitHelpers.GetGitBranch(repo, newProblemBranchName);
+        var newProblemBranch = gitService.GetGitBranch(repo, newProblemBranchName);
         
         var isNewBranch = newProblemBranch == null;
         if (newProblemBranch == null)
-            newProblemBranch = GitHelpers.CreateGitBranch(repo, newProblemBranchName, defaultBranch.Tip);
+            newProblemBranch = gitService.CreateGitBranch(repo, newProblemBranchName, defaultBranch.Tip);
 
         try {
             LibGit2Sharp.Commands.Checkout(repo, newProblemBranch);
         }
         catch (CheckoutConflictException ex) {
-            GitHelpers.TryDeleteGitBranch(repo, newProblemBranchName);
+            gitService.TryDeleteGitBranch(repo, newProblemBranchName);
             throw new AoCException(AoCMessages.ErrorGitRepositoryNotClean, ex);
         }
         catch (Exception ex) {
-            GitHelpers.TryDeleteGitBranch(repo, newProblemBranchName);
+            gitService.TryDeleteGitBranch(repo, newProblemBranchName);
             throw new AoCException(AoCMessages.ErrorGitCheckoutFailed(newProblemBranchName), ex);
         }
 
@@ -84,7 +81,7 @@ internal class ProblemService : IProblemService
             var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
 
             if (signature == null) {
-                GitHelpers.TryDeleteGitBranch(repo, newProblemBranchName);
+                gitService.TryDeleteGitBranch(repo, newProblemBranchName);
                 throw new AoCException(AoCMessages.ErrorGitAuthorNotFound);
             }
 
@@ -95,8 +92,17 @@ internal class ProblemService : IProblemService
             AnsiConsole.MarkupLine(AoCMessages.WarningGitProblemBranchAlreadyExists(newProblemBranchName));
         }
     }
-    
-    public ProblemLevel ParseProblemLevel(HtmlNode problemNode) {
+
+    public static string GetProblemDirectory(int year, int day, bool includeTest = false) {
+        var problemPath = Path.Combine(year.ToString(), $"Day{day:00}");
+
+        if (includeTest)
+            problemPath = Path.Combine(problemPath, "test");
+        
+        return problemPath;
+    }
+
+    private static ProblemLevel ParseProblemLevel(HtmlNode problemNode) {
         return problemNode.SelectSingleNode("//form//input[1]")?.Attributes["value"]?.Value switch {
             "1" => ProblemLevel.PartOne,
             "2" => ProblemLevel.PartTwo,
@@ -105,7 +111,7 @@ internal class ProblemService : IProblemService
         };
     }
 
-    public ProblemAnswers ParseProblemAnswers(HtmlNode problemNode) {
+    private static ProblemAnswers ParseProblemAnswers(HtmlNode problemNode) {
         var articleNodes = problemNode.SelectNodes("//main//article");
 
         if (articleNodes == null)
@@ -123,16 +129,7 @@ internal class ProblemService : IProblemService
             answers.ElementAtOrDefault(1)
         );
     }
-    
-    public static string GetProblemDirectory(int year, int day, bool includeTest = false) {
-        var problemPath = Path.Combine(year.ToString(), $"Day{day:00}");
 
-        if (includeTest)
-            problemPath = Path.Combine(problemPath, "test");
-        
-        return problemPath;
-    }
-    
     private static string GetOrCreateProblemDirectory(int year, int day, bool includeTest = false) {
         var problemPath = GetProblemDirectory(year, day, includeTest);
         
@@ -168,6 +165,8 @@ internal class ProblemService : IProblemService
     private static string GetSolutionTemplate(int year, int day) => 
         $$"""
           using AdventOfCode.NET.Model;
+          using AdventOfCode.NET.Utils;
+          
           // ReSharper disable CheckNamespace
           // ReSharper disable once UnusedType.Global
 
