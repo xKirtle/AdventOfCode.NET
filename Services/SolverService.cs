@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Model;
 using Spectre.Console;
 
@@ -66,15 +67,13 @@ internal class SolverService : ISolverService
     private static async Task<ProblemTestCase> ParseTestCase(string filePath) {
         var fileContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
         var testParts = fileContent.Split(["Part:", "Input:", "Output:"], StringSplitOptions.RemoveEmptyEntries);
-
+        
         if (testParts.Length < 3)
             throw new AoCException(AoCMessages.ErrorInvalidTestCase(filePath));
         
         var (level, input, output) = (testParts[0].Trim(), testParts[1].Trim(), testParts[2].Trim());
-
-        var testFields = (string.IsNullOrEmpty(level), string.IsNullOrEmpty(input), string.IsNullOrEmpty(output));
-
-         _ = testFields switch {
+        
+         _ = (string.IsNullOrEmpty(level), string.IsNullOrEmpty(input), string.IsNullOrEmpty(output)) switch {
             (true, _, _) => throw new AoCException(AoCMessages.ErrorParsingTestCasePart(filePath)),
             (_, true, _) => throw new AoCException(AoCMessages.ErrorParsingTestCaseInput(filePath)),
             (_, _, true) => throw new AoCException(AoCMessages.ErrorParsingTestCaseOutput(filePath)),

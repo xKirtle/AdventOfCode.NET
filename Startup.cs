@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using AdventOfCode.NET.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -30,13 +31,19 @@ public static class Startup
     }
 
     internal static void HandleExceptions(Exception ex) {
-        // TODO: Remove this CW
-        Console.WriteLine(ex.GetType());
-        if (ex is AoCException or CommandRuntimeException)
-            AnsiConsole.MarkupLine(ex.Message);
-        else if (ex.InnerException is AoCException)
-            AnsiConsole.MarkupLine(ex.InnerException.Message);
-        // else
-            // Log all exceptions not thrown by AdventOfCode.NET
+        switch (ex) {
+            case AoCSolutionException:
+                throw ex;
+            case AoCException or CommandRuntimeException:
+                AnsiConsole.MarkupLine(ex.Message);
+                break;
+            default: {
+                if (ex.InnerException is AoCException)
+                    AnsiConsole.MarkupLine(ex.InnerException.Message);
+                // else
+                // Log all exceptions not thrown by AdventOfCode.NET
+                break;
+            }
+        }
     }
 }

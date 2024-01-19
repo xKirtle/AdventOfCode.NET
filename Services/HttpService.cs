@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Model;
 using HtmlAgilityPack;
 using Spectre.Console;
@@ -45,7 +46,7 @@ internal class HttpService : IHttpService
         var content = await FetchContentAsync($"{year}/day/{day}/input");
         
         // Standardize to LF, then replace LF with Environment.NewLine
-        return content.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        return content.Replace("\r\n", "\n").Replace("\n", Environment.NewLine).Trim();
     }
 
     public async Task<HtmlNode> SubmitSolutionAsync(int year, int day, ProblemLevel level, string answer) {

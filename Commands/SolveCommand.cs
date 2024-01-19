@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Model;
 using AdventOfCode.NET.Services;
 using Spectre.Console;
@@ -15,21 +16,35 @@ internal sealed class SolveCommand(ISolverService solverService, IHttpService ht
         if (!testCasesPassed) 
             return 0;
         
-        var problemNode = httpService.FetchProblemAsync(settings.Year, settings.Day).GetAwaiter().GetResult();
-        var problemInput = httpService.FetchProblemInputAsync(settings.Year, settings.Day).GetAwaiter().GetResult();
-        var problem = problemService.ParseProblem(settings.Year, settings.Day, problemNode, problemInput);
+        var problem = FetchAndParseProblem(settings.Year, settings.Day);
 
         if (problem.Level == ProblemLevel.Finished) {
             AnsiConsole.MarkupLine(AoCMessages.WarningProblemAlreadySolved(settings.Year, settings.Day));
             return 0;
         }
 
-        var result = solverService.GetSolutionResult(settings.Year, settings.Day, problem.Level, problem.Input);
+        // if an exception happens here, we want to return it to the user
+        object result;
+        try {
+            result = solverService.GetSolutionResult(settings.Year, settings.Day, problem.Level, problem.Input);
+        }
+        catch (Exception ex) {
+            throw new AoCSolutionException(ex.Message, ex);
+        }
+        
         var responseDocument = httpService.SubmitSolutionAsync(settings.Year, settings.Day, problem.Level, result.ToString()!).GetAwaiter().GetResult();
         
         var response = httpService.ParseSubmissionResponse(responseDocument);
         AnsiConsole.MarkupLine(response);
 
         return 0;
+    }
+    
+    private Problem FetchAndParseProblem(int year, int day) {
+        var problemNode = httpService.FetchProblemAsync(year, day).GetAwaiter().GetResult();
+        var problemInput = httpService.FetchProblemInputAsync(year, day).GetAwaiter().GetResult();
+        var problem = problemService.ParseProblem(year, day, problemNode, problemInput);
+        
+        return problem;
     }
 }

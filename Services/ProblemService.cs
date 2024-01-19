@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Model;
 using HtmlAgilityPack;
 using LibGit2Sharp;
@@ -166,6 +167,8 @@ internal class ProblemService : IProblemService
     private static string GetSolutionTemplate(int year, int day) => 
         $$"""
           using AdventOfCode.NET.Model;
+          // ReSharper disable CheckNamespace
+          // ReSharper disable once UnusedType.Global
 
           namespace AdventOfCode.NET.Y{{year}}.Day{{day:00}};
 

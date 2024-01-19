@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using AdventOfCode.NET.Exceptions;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -28,6 +29,9 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
             
             AnsiConsole.MarkupLine(AoCMessages.SuccessSessionTokenSaved(settings.Session));
             Environment.SetEnvironmentVariable("AOC_SESSION_COOKIE", settings.Session, EnvironmentVariableTarget.User);
+        }
+        else {
+            AnsiConsole.MarkupLine(AoCMessages.InfoSessionTokenUnmodified);
         }
         
         var previousDefaultBranch = Environment.GetEnvironmentVariable("AOC_GIT_DEFAULT_BRANCH", EnvironmentVariableTarget.User);

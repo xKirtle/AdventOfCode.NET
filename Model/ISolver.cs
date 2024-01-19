@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode.NET.Model;
+﻿using AdventOfCode.NET.Exceptions;
+
+namespace AdventOfCode.NET.Model;
 
 public interface ISolver
 {

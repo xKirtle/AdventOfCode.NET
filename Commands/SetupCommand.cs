@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;

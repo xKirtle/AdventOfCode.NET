@@ -1,4 +1,5 @@
-﻿using LibGit2Sharp;
+﻿using AdventOfCode.NET.Exceptions;
+using LibGit2Sharp;
 
 namespace AdventOfCode.NET;
 

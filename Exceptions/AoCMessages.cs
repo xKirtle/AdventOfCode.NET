@@ -1,7 +1,7 @@
 ﻿using AdventOfCode.NET.Model;
 using AdventOfCode.NET.Services;
 
-namespace AdventOfCode.NET;
+namespace AdventOfCode.NET.Exceptions;
 
 /// <summary>
 /// Messages used throughout the application formatted with Spectre.Console markup.
@@ -172,4 +172,7 @@ internal static class AoCMessages
     
     public static string SuccessSetupCompleted(int year, int day) =>
         $"[green]Success:[/] Setup completed for [blue]Y{year}/D{day}[/]!";
+    
+    public static string InfoSessionTokenUnmodified =>
+        "New session token is the same as the previous one. Skipping update...";
 }
