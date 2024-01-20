@@ -23,7 +23,7 @@ internal sealed class SolveCommand(ISolverService solverService, IHttpService ht
             return 0;
         }
 
-        // if an exception happens here, we want to return it to the user
+        // if an exception happens in the user's code, we want to propagate it to them
         object result;
         try {
             result = solverService.GetSolutionResult(settings.Year, settings.Day, problem.Level, problem.Input);
@@ -34,8 +34,19 @@ internal sealed class SolveCommand(ISolverService solverService, IHttpService ht
         
         var responseDocument = httpService.SubmitSolutionAsync(settings.Year, settings.Day, problem.Level, result.ToString()!).GetAwaiter().GetResult();
         
-        var response = httpService.ParseSubmissionResponse(responseDocument);
+        var response = httpService.ParseSubmissionResponse(responseDocument, out var correctAnswer);
         AnsiConsole.MarkupLine(response);
+        
+        if (!correctAnswer)
+            return 0;
+        
+        AnsiConsole.MarkupLine(AoCMessages.InfoUpdatingProblemFiles(settings.Year, settings.Day));
+        var updatedProblem = FetchAndParseProblem(settings.Year, settings.Day);
+        problemService.UpdateProblemFiles(updatedProblem).GetAwaiter().GetResult();
+
+        if (updatedProblem.Level == ProblemLevel.Finished) {
+            // Ask user if they want to benchmark their solution?
+        }
 
         return 0;
     }

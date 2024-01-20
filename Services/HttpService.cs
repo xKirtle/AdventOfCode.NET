@@ -14,7 +14,7 @@ internal interface IHttpService
     Task<HtmlNode> FetchProblemAsync(int year, int day);
     Task<string> FetchProblemInputAsync(int year, int day);
     Task<HtmlNode> SubmitSolutionAsync(int year, int day, ProblemLevel level, string answer);
-    string ParseSubmissionResponse(HtmlNode responseDocument);
+    string ParseSubmissionResponse(HtmlNode responseDocument, out bool correctAnswer);
 }
 
 internal class HttpService : IHttpService
@@ -122,11 +122,13 @@ internal class HttpService : IHttpService
     }
     
     [SuppressMessage("Performance", "SYSLIB1045:Convert to \'GeneratedRegexAttribute\'.")]
-    public string ParseSubmissionResponse(HtmlNode responseDocument) {
+    public string ParseSubmissionResponse(HtmlNode responseDocument, out bool correctAnswer) {
+        correctAnswer = false;
         var sb = new StringBuilder();
         var responseNode = responseDocument.SelectSingleNode("//article//p[1]");
 
         if (responseNode?.ChildNodes?.Any(child => child.HasClass("day-success")) ?? false) {
+            correctAnswer = true;
             sb.Append("That's the right answer!");
             
             var daySuccessNode = responseDocument.SelectSingleNode("//article//p[2]");

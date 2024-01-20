@@ -11,6 +11,7 @@ internal interface IProblemService
 {
     Problem ParseProblem(int year, int day, HtmlNode problemNode, string problemInput);
     Task SetupProblemFiles(Problem problem);
+    Task UpdateProblemFiles(Problem problem);
     void SetupGitForProblem(int year, int day);
 }
 
@@ -45,6 +46,22 @@ internal class ProblemService(IGitService gitService) : IProblemService
             tasks.Add(CreateProblemFile(problem.Year, problem.Day, "problem.out", string.Join(Environment.NewLine, answers)));
         }
 
+        await Task.WhenAll(tasks);
+    }
+
+    public async Task UpdateProblemFiles(Problem problem) {
+        var tasks = new List<Task> {
+            CreateProblemFile(problem.Year, problem.Day, "README.md", problem.ContentMarkdown, overwrite: true),
+            CreateProblemFile(problem.Year, problem.Day, "problem.in", problem.Input, overwrite: true)
+        };
+        
+        var answers = problem.Answers.ToArray();
+        if (answers.Length > 0) {
+            tasks.Add(CreateProblemFile(problem.Year, problem.Day, "problem.out", string.Join(Environment.NewLine, answers), overwrite: true));
+        }
+        
+        // Create new test for main input for the part solved?
+        
         await Task.WhenAll(tasks);
     }
 
@@ -142,10 +159,10 @@ internal class ProblemService(IGitService gitService) : IProblemService
         return problemPath;
     }
     
-    private static async Task<string> CreateProblemFile(int year, int day, string fileNameWithExtension, string fileContent, bool isTestFile = false) {
+    private static async Task<string> CreateProblemFile(int year, int day, string fileNameWithExtension, string fileContent, bool overwrite = false, bool isTestFile = false) {
         var filePath = Path.Combine(GetOrCreateProblemDirectory(year, day, isTestFile), fileNameWithExtension);
 
-        if (File.Exists(filePath)) {
+        if (File.Exists(filePath) && !overwrite) {
             AnsiConsole.Markup(AoCMessages.WarningPromptCreatingProblemFileOverriding(filePath));
             var keyInfo = AnsiConsole.Console.Input.ReadKey(true);
             AnsiConsole.MarkupLine(string.Empty);

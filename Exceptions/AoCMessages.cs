@@ -178,4 +178,7 @@ internal static class AoCMessages
     
     public static string SuccessNoGitSaved(string noGit) =>
         $"[blue]{noGit}[/] saved as the no-git flag.";
+    
+    public static string InfoUpdatingProblemFiles(int year, int day) =>
+        $"Updating problem files for [blue]Y{year}/D{day}[/]...";
 }
