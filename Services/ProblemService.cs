@@ -66,44 +66,15 @@ internal class ProblemService(IGitService gitService) : IProblemService
     }
 
     public void SetupGitForProblem(int year, int day) {
-        var pathToRepo = Repository.Discover(".\\");
-        
-        if (string.IsNullOrEmpty(pathToRepo))
-            throw new AoCException(AoCMessages.ErrorGitRepositoryNotFound);
-        
+        var pathToRepo = gitService.DiscoverRepositoryPath();
         using var repo = new Repository(pathToRepo);
-        var defaultBranch = gitService.GetGitDefaultBranch(repo);
         
         var newProblemBranchName = $"problem/{year}/day/{day}";
-        var newProblemBranch = gitService.GetGitBranch(repo, newProblemBranchName);
-        
-        var isNewBranch = newProblemBranch == null;
-        if (newProblemBranch == null)
-            newProblemBranch = gitService.CreateGitBranch(repo, newProblemBranchName, defaultBranch.Tip);
-
-        try {
-            LibGit2Sharp.Commands.Checkout(repo, newProblemBranch);
-        }
-        catch (CheckoutConflictException ex) {
-            gitService.TryDeleteGitBranch(repo, newProblemBranchName);
-            throw new AoCException(AoCMessages.ErrorGitRepositoryNotClean, ex);
-        }
-        catch (Exception ex) {
-            gitService.TryDeleteGitBranch(repo, newProblemBranchName);
-            throw new AoCException(AoCMessages.ErrorGitCheckoutFailed(newProblemBranchName), ex);
-        }
+        var newProblemBranch = gitService.CreateOrGetBranch(repo, newProblemBranchName, out var isNewBranch);
+        gitService.CheckoutBranch(repo, newProblemBranch);
 
         if (isNewBranch) {
-            LibGit2Sharp.Commands.Stage(repo, year.ToString());
-            var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
-
-            if (signature == null) {
-                gitService.TryDeleteGitBranch(repo, newProblemBranchName);
-                throw new AoCException(AoCMessages.ErrorGitAuthorNotFound);
-            }
-
-            var commitMessage = AoCMessages.InfoGitCommitMessage(year, day);
-            repo.Commit(commitMessage, signature, signature);
+            gitService.StageAndCommitNewProblem(repo, year, day, newProblemBranch);
         }
         else {
             AnsiConsole.MarkupLine(AoCMessages.WarningGitProblemBranchAlreadyExists(newProblemBranchName));

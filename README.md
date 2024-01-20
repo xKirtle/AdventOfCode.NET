@@ -35,6 +35,8 @@ Initialize any values required by the application.
   - AoC session token.
 - `[-b | --branch]`
   - Default value is `master`. If you use another name, set it with this argument.
+- `[--no-git]`
+  - Flag to choose whether you want git operations to run. If true, no dedicated branch will be created for each day and no time spent on problem will be calculated once part two of the problem is solved.
 
 
 ### Setup [setup]
