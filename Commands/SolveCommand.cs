@@ -9,7 +9,7 @@ namespace AdventOfCode.NET.Commands;
 
 
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global", Justification = "Instantiated by Spectre.Console.Cli")]
-internal sealed class SolveCommand(ISolverService solverService, IHttpService httpService, IProblemService problemService) : Command<DateSettings>
+internal sealed class SolveCommand(ISolverService solverService, IHttpService httpService, IProblemService problemService, IEnvironmentVariablesService envVariablesService) : Command<DateSettings>
 {
     public override int Execute(CommandContext context, DateSettings settings) {
         var testCasesPassed = solverService.TrySolveProblemTests(settings.Year, settings.Day).GetAwaiter().GetResult();
@@ -43,6 +43,10 @@ internal sealed class SolveCommand(ISolverService solverService, IHttpService ht
         AnsiConsole.MarkupLine(AoCMessages.InfoUpdatingProblemFiles(settings.Year, settings.Day));
         var updatedProblem = FetchAndParseProblem(settings.Year, settings.Day);
         problemService.UpdateProblemFiles(updatedProblem).GetAwaiter().GetResult();
+
+        if (!envVariablesService.NoGit) {
+            problemService.UpdateGitForProblem(settings.Year, settings.Day, updatedProblem.Level);
+        }
 
         if (updatedProblem.Level == ProblemLevel.Finished) {
             // Ask user if they want to benchmark their solution?

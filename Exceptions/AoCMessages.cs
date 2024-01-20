@@ -71,7 +71,7 @@ internal static class AoCMessages
          [yellow]Skipping Git setup...[/]
          """;
     
-    public static string InfoGitCommitMessage(int year, int day) => $"Initial commit for Y{year}D{day}";
+    public static string InfoGitCommitMessage(int year, int day) => $"Initial commit for Y{year}D{day:00}";
 
     public static string ErrorGitAuthorNotFound =>
         """
@@ -102,25 +102,25 @@ internal static class AoCMessages
     
     public static string ErrorMultipleProblemsFound(int year, int day) =>
         $"""
-         [red]Error: [/]Multiple problem solutions found for Y{year}D{day}.
+         [red]Error: [/]Multiple problem solutions found for Y{year}D{day:00}.
          Please ensure only one class is marked with [blue]AoCSolutionAttribute[/] for each day.
          """;
     
     public static string ErrorNoProblemFound(int year, int day) =>
         $"""
-         [red]Error: [/]No problem solution found for Y{year}D{day}.
+         [red]Error: [/]No problem solution found for Y{year}D{day:00}.
          Please ensure a class is marked with [blue]AoCSolutionAttribute[/] for each day.
          """;
     
     public static string ErrorSolutionInstantiationFailed(int year, int day) =>
         $"""
-         [red]Error: [/]Could not instantiate solution for Y{year}D{day}.
+         [red]Error: [/]Could not instantiate solution for Y{year}D{day:00}.
          Please ensure the solution class has a public parameterless constructor.
          """;
     
     public static string WarningNoTestsDirectoryFound(int year, int day) =>
         $"""
-         [yellow]Warning: [/]No tests directory found for Y{year}D{day}.
+         [yellow]Warning: [/]No tests directory found for Y{year}D{day:00}.
          [yellow]Skipping test execution...[/]
          """;
     
@@ -163,15 +163,15 @@ internal static class AoCMessages
     
     public static string ErrorProblemSolutionIsNull(int year, int day, ProblemLevel level) =>
         $"""
-         [red]Error: [/]Solution for Y{year}D{day} part {(level == ProblemLevel.PartOne ? "one" : "two")} is [yellow]null[/].
+         [red]Error: [/]Solution for Y{year}D{day:00} part {(level == ProblemLevel.PartOne ? "one" : "two")} is [yellow]null[/].
          Please ensure the solution does not return a nullable value.
          """;
     
     public static string WarningProblemAlreadySolved(int year, int day) =>
-        $"[yellow]Warning: [/]Problem Y{year}D{day} is already solved in AoC. Skipping submission...";
+        $"[yellow]Warning: [/]Problem Y{year}D{day:00} is already solved in AoC. Skipping submission...";
     
     public static string SuccessSetupCompleted(int year, int day) =>
-        $"[green]Success:[/] Setup completed for [blue]Y{year}/D{day}[/]!";
+        $"[green]Success:[/] Setup completed for [blue]Y{year}/D{day:00}[/]!";
     
     public static string InfoSessionTokenUnmodified =>
         "New session token is the same as the previous one. Skipping update...";
@@ -180,5 +180,23 @@ internal static class AoCMessages
         $"[blue]{noGit}[/] saved as the no-git flag.";
     
     public static string InfoUpdatingProblemFiles(int year, int day) =>
-        $"Updating problem files for [blue]Y{year}/D{day}[/]...";
+        $"Updating problem files for [blue]Y{year}/D{day:00}[/]...";
+    
+    public static string InfoGitCommitMessagePartOneSolved(int year, int day) =>
+        $"Solved part one of Y{year}D{day:00}";
+    
+    public static string InfoGitCommitMessagePartTwoSolved(int year, int day) =>
+        $"Solved part two of Y{year}D{day:00}! The problem is now finished.";
+    
+    public static string ErrorProblemGitBranchNotFound(int year, int day, string branchName) =>
+        $"""
+         [red]Error: [/]Could not find Git branch [blue]{branchName}[/] for Y{year}D{day:00}.
+         Please ensure the branch exists and is checked out.
+         """;
+    
+    public static string WarningProblemGitBranchNotCheckedOut(int year, int day, string branchName) =>
+        $"""
+         [yellow]Warning: [/]Git branch [blue]{branchName}[/] for Y{year}D{day:00} is not checked out.
+         [yellow]Skipping Git commit...[/]
+         """;
 }

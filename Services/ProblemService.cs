@@ -13,6 +13,7 @@ internal interface IProblemService
     Task SetupProblemFiles(Problem problem);
     Task UpdateProblemFiles(Problem problem);
     void SetupGitForProblem(int year, int day);
+    void UpdateGitForProblem(int year, int day, ProblemLevel level);
 }
 
 internal class ProblemService(IGitService gitService) : IProblemService
@@ -60,6 +61,9 @@ internal class ProblemService(IGitService gitService) : IProblemService
             tasks.Add(CreateProblemFile(problem.Year, problem.Day, "problem.out", string.Join(Environment.NewLine, answers), overwrite: true));
         }
         
+        // we can infer at what stage the problem is solved by the number of answers present in the parsed problem
+        // useful for Git commit messages
+        
         // Create new test for main input for the part solved?
         
         await Task.WhenAll(tasks);
@@ -69,16 +73,21 @@ internal class ProblemService(IGitService gitService) : IProblemService
         var pathToRepo = gitService.DiscoverRepositoryPath();
         using var repo = new Repository(pathToRepo);
         
-        var newProblemBranchName = $"problem/{year}/day/{day}";
-        var newProblemBranch = gitService.CreateOrGetBranch(repo, newProblemBranchName, out var isNewBranch);
+        var newProblemBranch = gitService.CreateOrGetBranch(repo, year, day, out var isNewBranch);
         gitService.CheckoutBranch(repo, newProblemBranch);
 
         if (isNewBranch) {
             gitService.StageAndCommitNewProblem(repo, year, day, newProblemBranch);
         }
         else {
-            AnsiConsole.MarkupLine(AoCMessages.WarningGitProblemBranchAlreadyExists(newProblemBranchName));
+            AnsiConsole.MarkupLine(AoCMessages.WarningGitProblemBranchAlreadyExists(newProblemBranch.FriendlyName));
         }
+    }
+
+    public void UpdateGitForProblem(int year, int day, ProblemLevel level) {
+        var pathToRepo = gitService.DiscoverRepositoryPath();
+        using var repo = new Repository(pathToRepo);
+        gitService.StageAndCommitProblemUpdate(repo, year, day, level);
     }
 
     public static string GetProblemDirectory(int year, int day, bool includeTest = false) {
