@@ -11,16 +11,9 @@ namespace AdventOfCode.NET;
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 public static class Startup
 {
-    public static void InitializeFramework(out IServiceCollection serviceCollection, params string[] args) {
-        InternalInitializeFramework(out serviceCollection, args);
-    }
-    
     public static void InitializeFramework(params string[] args) {
-        InternalInitializeFramework(out _, args);
-    }
-    
-    private static void InternalInitializeFramework(out IServiceCollection serviceCollection, params string[] args) {
-        serviceCollection = new ServiceCollection().AddAdventOfCodeServices();
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddAdventOfCodeServices();
         serviceCollection.GetAdventOfCodeCommandApp(out var app);
         
         try {

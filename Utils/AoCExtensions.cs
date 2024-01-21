@@ -1,4 +1,5 @@
-﻿using AdventOfCode.NET.Commands;
+﻿using System.Diagnostics.CodeAnalysis;
+using AdventOfCode.NET.Commands;
 using AdventOfCode.NET.DependencyInjection;
 using AdventOfCode.NET.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,6 +7,7 @@ using Spectre.Console.Cli;
 
 namespace AdventOfCode.NET.Utils;
 
+[SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 public static class AoCExtensions
 {
     public static IServiceCollection AddAdventOfCodeServices(this IServiceCollection services) {

@@ -14,10 +14,6 @@ Startup.InitializeFramework(args);
 Then, you'll have to call the `init` command to initialize the application with your Advent of Code session token.
 You can do so by executing `dotnet run init <session>`. For example, `dotnet run init 53616c...f37200`.
 
-## Extras
-
-TODO: Mention that Startup.InitializeFramework(args) can return an IServiceCollection that can be used to add your own services to use Dependency Injection with an `out` argument?
-
 ## Commands
 
 From your terminal, call `dotnet run` to get a list of commands available. This should print something like this:
