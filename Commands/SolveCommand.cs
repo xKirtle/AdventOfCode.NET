@@ -13,25 +13,18 @@ internal sealed class SolveCommand(ISolverService solverService, IHttpService ht
 {
     public override int Execute(CommandContext context, DateSettings settings) {
         var testCasesPassed = solverService.TrySolveProblemTests(settings.Year, settings.Day).GetAwaiter().GetResult();
-        if (!testCasesPassed) 
+        if (!testCasesPassed) {
             return 0;
-        
-        var problem = FetchAndParseProblem(settings.Year, settings.Day);
+        }
 
+        var problem = FetchAndParseProblem(settings.Year, settings.Day);
+        
         if (problem.Level == ProblemLevel.Finished) {
             AnsiConsole.MarkupLine(AoCMessages.WarningProblemAlreadySolved(settings.Year, settings.Day));
             return 0;
         }
-
-        // if an exception happens in the user's code, we want to propagate it to them
-        object result;
-        try {
-            result = solverService.GetSolutionResult(settings.Year, settings.Day, problem.Level, problem.Input);
-        }
-        catch (Exception ex) {
-            throw new AoCSolutionException(ex.Message, ex);
-        }
         
+        var result = solverService.GetSolutionResult(settings.Year, settings.Day, problem.Level, problem.Input);
         var responseDocument = httpService.SubmitSolutionAsync(settings.Year, settings.Day, problem.Level, result.ToString()!).GetAwaiter().GetResult();
         
         var response = httpService.ParseSubmissionResponse(responseDocument, out var correctAnswer);
@@ -45,13 +38,13 @@ internal sealed class SolveCommand(ISolverService solverService, IHttpService ht
         problemService.UpdateProblemFiles(updatedProblem).GetAwaiter().GetResult();
 
         if (!envVariablesService.NoGit) {
-            problemService.UpdateGitForProblem(settings.Year, settings.Day, updatedProblem.Level);
+            problemService.TryUpdateGitForProblem(settings.Year, settings.Day, updatedProblem.Level);
         }
-
+        
         if (updatedProblem.Level == ProblemLevel.Finished) {
             // Ask user if they want to benchmark their solution?
         }
-
+        
         return 0;
     }
     

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using AdventOfCode.NET.Exceptions;
 using AdventOfCode.NET.Model;
 using HtmlAgilityPack;
@@ -13,7 +14,7 @@ internal interface IProblemService
     Task SetupProblemFiles(Problem problem);
     Task UpdateProblemFiles(Problem problem);
     void SetupGitForProblem(int year, int day);
-    void UpdateGitForProblem(int year, int day, ProblemLevel level);
+    void TryUpdateGitForProblem(int year, int day, ProblemLevel level);
 }
 
 internal class ProblemService(IGitService gitService) : IProblemService
@@ -22,9 +23,11 @@ internal class ProblemService(IGitService gitService) : IProblemService
         // Extract logic to parse problem's markdown to its own method?
         var contentMarkdownStringBuilder = new StringBuilder();
         foreach (var article in problemNode.SelectNodes("//article")) {
-            contentMarkdownStringBuilder.Append(article.InnerHtml
+            var parsedInnerHtml = ReplaceAoCRelativeUrls(article.InnerHtml)
                 .Replace("<em", "<strong")
-                .Replace("</em>", "</strong>"));
+                .Replace("</em>", "</strong>");
+            
+            contentMarkdownStringBuilder.Append(parsedInnerHtml);
         }
 
         var answers = ParseProblemAnswers(problemNode);
@@ -74,20 +77,51 @@ internal class ProblemService(IGitService gitService) : IProblemService
         using var repo = new Repository(pathToRepo);
         
         var newProblemBranch = gitService.CreateOrGetBranch(repo, year, day, out var isNewBranch);
-        gitService.CheckoutBranch(repo, newProblemBranch);
-
-        if (isNewBranch) {
-            gitService.StageAndCommitNewProblem(repo, year, day, newProblemBranch);
+        
+        try {
+            gitService.CheckoutBranch(repo, newProblemBranch);
+            
+            if (isNewBranch) {
+                gitService.StageProblemFiles(repo, year, day);
+                var commitMessage = AoCMessages.InfoInitialGitCommitMessage(year, day);
+                gitService.CommitProblemFiles(repo, year, day, commitMessage, repo.Head);
+            
+                // git reset problem folder...?
+            }
+            else {
+                AnsiConsole.MarkupLine(AoCMessages.WarningGitProblemBranchAlreadyExists(newProblemBranch.FriendlyName));
+            }
+        } catch (CheckoutConflictException ex) {
+            gitService.TryDeleteGitBranch(repo, newProblemBranch);
+            throw new AoCException(AoCMessages.ErrorGitRepositoryNotClean, ex);
+        } catch (Exception ex) {
+            gitService.TryDeleteGitBranch(repo, newProblemBranch);
+            throw new AoCException(AoCMessages.ErrorGitCheckoutFailed(newProblemBranch.FriendlyName), ex);
         }
-        else {
-            AnsiConsole.MarkupLine(AoCMessages.WarningGitProblemBranchAlreadyExists(newProblemBranch.FriendlyName));
-        }
+        
+        // Push to remote?
     }
 
-    public void UpdateGitForProblem(int year, int day, ProblemLevel level) {
+    public void TryUpdateGitForProblem(int year, int day, ProblemLevel level) {
         var pathToRepo = gitService.DiscoverRepositoryPath();
         using var repo = new Repository(pathToRepo);
-        gitService.StageAndCommitProblemUpdate(repo, year, day, level);
+        
+        // Problem setup with --no-git flag?
+        if (!gitService.IsProblemBranchCheckedOut(repo, year, day)) {
+            var problemBranchName = gitService.GetBranchNameOfProblem(year, day);
+            AnsiConsole.MarkupLine(AoCMessages.WarningProblemGitBranchNotCheckedOut(year, day, problemBranchName));
+            return;
+        }
+        
+        gitService.StageProblemFiles(repo, year, day);
+        var commitMessage = gitService.GetProblemSolvedCommitMessage(year, day, level);
+        gitService.CommitProblemFiles(repo, year, day, commitMessage, repo.Head);
+
+        if (level == ProblemLevel.Finished) {
+            gitService.MergeProblemBranchIntoDefaultBranch(repo, repo.Head);
+        }
+        
+        // Push to remote?
     }
 
     public static string GetProblemDirectory(int year, int day, bool includeTest = false) {
@@ -125,6 +159,14 @@ internal class ProblemService(IGitService gitService) : IProblemService
             answers.ElementAtOrDefault(0),
             answers.ElementAtOrDefault(1)
         );
+    }
+    
+    private static string ReplaceAoCRelativeUrls(string htmlContent) {
+        const string aocUrl = "https://adventofcode.com/";
+        const string relativeUrlPattern = "(href|src)=\"/(?![/])(?!http:)(?!https:)(.*?)\"";
+        var regex = new Regex(relativeUrlPattern, RegexOptions.IgnoreCase);
+        
+        return regex.Replace(htmlContent, $"$1=\"{aocUrl}$2\"");
     }
 
     private static string GetOrCreateProblemDirectory(int year, int day, bool includeTest = false) {

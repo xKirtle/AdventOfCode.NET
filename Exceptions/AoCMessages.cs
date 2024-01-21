@@ -1,5 +1,6 @@
 ﻿using AdventOfCode.NET.Model;
 using AdventOfCode.NET.Services;
+using LibGit2Sharp;
 
 namespace AdventOfCode.NET.Exceptions;
 
@@ -71,7 +72,7 @@ internal static class AoCMessages
          [yellow]Skipping Git setup...[/]
          """;
     
-    public static string InfoGitCommitMessage(int year, int day) => $"Initial commit for Y{year}D{day:00}";
+    public static string InfoInitialGitCommitMessage(int year, int day) => $"Initial commit for Y{year}D{day:00}";
 
     public static string ErrorGitAuthorNotFound =>
         """
@@ -183,20 +184,27 @@ internal static class AoCMessages
         $"Updating problem files for [blue]Y{year}/D{day:00}[/]...";
     
     public static string InfoGitCommitMessagePartOneSolved(int year, int day) =>
-        $"Solved part one of Y{year}D{day:00}";
+        $"Solved part one of Y{year}/D{day:00}";
     
     public static string InfoGitCommitMessagePartTwoSolved(int year, int day) =>
-        $"Solved part two of Y{year}D{day:00}! The problem is now finished.";
-    
-    public static string ErrorProblemGitBranchNotFound(int year, int day, string branchName) =>
-        $"""
-         [red]Error: [/]Could not find Git branch [blue]{branchName}[/] for Y{year}D{day:00}.
-         Please ensure the branch exists and is checked out.
-         """;
+        $"Finished problem Y{year}/D{day:00}";
     
     public static string WarningProblemGitBranchNotCheckedOut(int year, int day, string branchName) =>
         $"""
-         [yellow]Warning: [/]Git branch [blue]{branchName}[/] for Y{year}D{day:00} is not checked out.
-         [yellow]Skipping Git commit...[/]
+         [yellow]Warning: [/]Git branch [blue]{branchName}[/] for [blue]Y{year}/D{day:00}[/] is not checked out.
+         [yellow]Skipping Git operations...[/]
+         """;
+    
+    public static string ErrorGitMergeConflict(string branchName) =>
+        $"""
+         [red]Error: [/]Git merge conflict on branch [blue]{branchName}[/].
+         Please resolve the conflict and commit the changes.
+         """;
+    
+    public static string ErrorGitMergeFailed(string problemBranchName, string defaultBranchName, MergeStatus status) =>
+        $"""
+         [red]Error: [/]Git merge failed.
+         Could not merge [blue]{problemBranchName}[/] into [blue]{defaultBranchName}[/].
+         Merge status: [blue]{status}[/].
          """;
 }

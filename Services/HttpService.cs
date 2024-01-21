@@ -129,7 +129,7 @@ internal class HttpService : IHttpService
 
         if (responseNode?.ChildNodes?.Any(child => child.HasClass("day-success")) ?? false) {
             correctAnswer = true;
-            sb.Append("That's the right answer!");
+            sb.Append("[green]Success:[/] That's the right answer!");
             
             var daySuccessNode = responseDocument.SelectSingleNode("//article//p[2]");
             if (daySuccessNode == null) 
@@ -153,7 +153,7 @@ internal class HttpService : IHttpService
                 errorMessage = errorMessage.Replace(match.Groups[1].Value, "[red]" + match.Groups[1].Value + "[/]");
             }
             
-            sb.Append(errorMessage);
+            sb.Append($"[red]Error:[/] {errorMessage}");
         }
         
         return sb.Replace("  ", " ").ToString();

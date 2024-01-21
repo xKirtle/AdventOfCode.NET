@@ -49,13 +49,19 @@ internal class SolverService : ISolverService
 
     public object GetSolutionResult(int year, int day, ProblemLevel level, string input) {
         var solver = ISolver.GetSolverInstance(year, day);
-        
-        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-        var result = level switch {
-            ProblemLevel.PartOne => solver.PartOne(input),
-            ProblemLevel.PartTwo => solver.PartTwo(input),
-            _ => throw new UnreachableException($"Invalid problem level value: {level}")
-        };
+
+        object result;
+        try {
+            // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+            result = level switch {
+                ProblemLevel.PartOne => solver.PartOne(input),
+                ProblemLevel.PartTwo => solver.PartTwo(input),
+                _ => throw new UnreachableException($"Invalid problem level value: {level}")
+            };
+        }
+        catch (Exception ex) {
+            throw new AoCSolutionException(ex.Message, ex);
+        }
         
         if (result == null) {
             throw new AoCException(AoCMessages.ErrorProblemSolutionIsNull(year, day, level));
