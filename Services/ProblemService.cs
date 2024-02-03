@@ -84,7 +84,7 @@ internal class ProblemService(IGitService gitService) : IProblemService
             if (isNewBranch) {
                 gitService.StageProblemFiles(repo, year, day);
                 var commitMessage = AoCMessages.InfoInitialGitCommitMessage(year, day);
-                gitService.CommitProblemFiles(repo, year, day, commitMessage, repo.Head);
+                gitService.CommitProblemFiles(repo, commitMessage);
             
                 // git reset problem folder...?
             }
@@ -115,7 +115,7 @@ internal class ProblemService(IGitService gitService) : IProblemService
         
         gitService.StageProblemFiles(repo, year, day);
         var commitMessage = gitService.GetProblemSolvedCommitMessage(year, day, level);
-        gitService.CommitProblemFiles(repo, year, day, commitMessage, repo.Head);
+        gitService.CommitProblemFiles(repo, commitMessage);
 
         if (level == ProblemLevel.Finished) {
             gitService.MergeProblemBranchIntoDefaultBranch(repo, repo.Head);

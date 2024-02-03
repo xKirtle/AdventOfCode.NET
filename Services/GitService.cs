@@ -14,7 +14,7 @@ internal interface IGitService
     bool IsProblemBranchCheckedOut(IRepository repository, int year, int day);
     string GetBranchNameOfProblem(int year, int day);
     void CheckoutBranch(IRepository repository, Branch branch);
-    void CommitProblemFiles(IRepository repository, int year, int day, string commitMessage, Branch problemBranch);
+    void CommitProblemFiles(IRepository repository, string commitMessage);
     string GetProblemSolvedCommitMessage(int year, int day, ProblemLevel level);
     void StageProblemFiles(IRepository repository, int year, int day);
 }
@@ -69,7 +69,7 @@ internal class GitService(IEnvironmentVariablesService envVariablesService) : IG
         };
     }
     
-    public void CommitProblemFiles(IRepository repository, int year, int day, string commitMessage, Branch problemBranch) {
+    public void CommitProblemFiles(IRepository repository, string commitMessage) {
         var signature = GetSignature(repository);
         repository.Commit(commitMessage, signature, signature);
     }
