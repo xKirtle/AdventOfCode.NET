@@ -17,8 +17,10 @@ internal interface IProblemService
     void TryUpdateGitForProblem(int year, int day, ProblemLevel level);
 }
 
-internal class ProblemService(IGitService gitService) : IProblemService
+internal class ProblemService(IGitService gitService, IEnvironmentVariablesService envVariablesService) : IProblemService
 {
+    private readonly bool _verbose = envVariablesService.VerboseOutput;
+    
     public Problem ParseProblem(int year, int day, HtmlNode problemNode, string problemInput) {
         // Extract logic to parse problem's markdown to its own method?
         var contentMarkdownStringBuilder = new StringBuilder();
@@ -169,19 +171,21 @@ internal class ProblemService(IGitService gitService) : IProblemService
         return regex.Replace(htmlContent, $"$1=\"{aocUrl}$2\"");
     }
 
-    private static string GetOrCreateProblemDirectory(int year, int day, bool includeTest = false) {
+    private string GetOrCreateProblemDirectory(int year, int day, bool includeTest = false) {
         var problemPath = GetProblemDirectory(year, day, includeTest);
-        
-        // ReSharper disable once InvertIf
-        if (!Directory.Exists(problemPath)) {
+
+        if (Directory.Exists(problemPath)) 
+            return problemPath;
+
+        if (_verbose)
             AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemDirectory(problemPath));
-            Directory.CreateDirectory(problemPath);
-        }
+
+        Directory.CreateDirectory(problemPath);
 
         return problemPath;
     }
     
-    private static async Task<string> CreateProblemFile(int year, int day, string fileNameWithExtension, string fileContent, bool overwrite = false, bool isTestFile = false) {
+    private async Task<string> CreateProblemFile(int year, int day, string fileNameWithExtension, string fileContent, bool overwrite = false, bool isTestFile = false) {
         var filePath = Path.Combine(GetOrCreateProblemDirectory(year, day, isTestFile), fileNameWithExtension);
 
         if (File.Exists(filePath) && !overwrite) {
@@ -195,7 +199,9 @@ internal class ProblemService(IGitService gitService) : IProblemService
             }
         }
 
-        AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemFile(filePath));
+        if (_verbose)
+            AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemFile(filePath));
+        
         await File.WriteAllTextAsync(filePath, fileContent, Encoding.UTF8);
 
         return filePath;
