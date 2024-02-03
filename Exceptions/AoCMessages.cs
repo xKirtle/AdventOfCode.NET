@@ -207,4 +207,7 @@ internal static class AoCMessages
          Could not merge [blue]{problemBranchName}[/] into [blue]{defaultBranchName}[/].
          Merge status: [blue]{status}[/].
          """;
+    
+    public static string SuccessVerboseOutputSaved(string verbose) =>
+        $"[blue]{verbose}[/] saved as the verbose flag.";
 }
