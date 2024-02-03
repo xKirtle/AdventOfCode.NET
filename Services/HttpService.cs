@@ -21,10 +21,10 @@ internal class HttpService : IHttpService
 {
     private readonly HttpClient _client;
     private readonly Uri _aocBaseAddress;
-    private readonly bool _verbose;
+    private readonly bool _silentOutput;
 
     public HttpService(IEnvironmentVariablesService envVariablesService) {
-        _verbose = envVariablesService.VerboseOutput;
+        _silentOutput = envVariablesService.SilentOutput;
         _aocBaseAddress = new Uri("https://adventofcode.com");
         
         var handler = new HttpClientHandler {
@@ -94,7 +94,7 @@ internal class HttpService : IHttpService
     private async Task<string> FetchContentAsync(string relativeUri) {
         var requestUri = new Uri(_aocBaseAddress, relativeUri);
         
-        if (_verbose)
+        if (!_silentOutput)
             AnsiConsole.MarkupLine(AoCMessages.InfoFetchingContent(requestUri.ToString()));
 
         HttpResponseMessage? response = null;

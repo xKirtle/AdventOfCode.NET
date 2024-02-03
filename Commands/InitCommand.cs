@@ -27,10 +27,10 @@ internal sealed class InitCommand(IEnvironmentVariablesService envVariablesServi
         [DefaultValue(false)]
         public required bool NoGit { get; init; } = false;
         
-        [Description("Enable verbose output.")]
-        [CommandOption("--verbose")]
+        [Description("Enable silent output.")]
+        [CommandOption("--silent")]
         [DefaultValue(false)]
-        public required bool Verbose { get; init; } = false;
+        public required bool SilentOutput { get; init; } = false;
     }
 
     public override int Execute(CommandContext context, Settings settings) {
@@ -48,8 +48,8 @@ internal sealed class InitCommand(IEnvironmentVariablesService envVariablesServi
         if (envVariablesService.TrySetVariable(EnvironmentVariables.NoGit, settings.NoGit.ToString()))
             AnsiConsole.MarkupLine(AoCMessages.SuccessNoGitSaved(settings.NoGit.ToString()));
         
-        if (envVariablesService.TrySetVariable(EnvironmentVariables.VerboseOutput, settings.Verbose.ToString()))
-            AnsiConsole.MarkupLine(AoCMessages.SuccessVerboseOutputSaved(settings.Verbose.ToString()));
+        if (envVariablesService.TrySetVariable(EnvironmentVariables.SilentOutput, settings.SilentOutput.ToString()))
+            AnsiConsole.MarkupLine(AoCMessages.SuccessSilentOutputSaved(settings.SilentOutput.ToString()));
         
         return 0;
     }

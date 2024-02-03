@@ -208,6 +208,6 @@ internal static class AoCMessages
          Merge status: [blue]{status}[/].
          """;
     
-    public static string SuccessVerboseOutputSaved(string verbose) =>
-        $"[blue]{verbose}[/] saved as the verbose flag.";
+    public static string SuccessSilentOutputSaved(string silent) =>
+        $"[blue]{silent}[/] saved as the silent output flag.";
 }

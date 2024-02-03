@@ -19,7 +19,7 @@ internal interface IProblemService
 
 internal class ProblemService(IGitService gitService, IEnvironmentVariablesService envVariablesService) : IProblemService
 {
-    private readonly bool _verbose = envVariablesService.VerboseOutput;
+    private readonly bool _silentOutput = envVariablesService.SilentOutput;
     
     public Problem ParseProblem(int year, int day, HtmlNode problemNode, string problemInput) {
         // Extract logic to parse problem's markdown to its own method?
@@ -177,7 +177,7 @@ internal class ProblemService(IGitService gitService, IEnvironmentVariablesServi
         if (Directory.Exists(problemPath)) 
             return problemPath;
 
-        if (_verbose)
+        if (!_silentOutput)
             AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemDirectory(problemPath));
 
         Directory.CreateDirectory(problemPath);
@@ -199,7 +199,7 @@ internal class ProblemService(IGitService gitService, IEnvironmentVariablesServi
             }
         }
 
-        if (_verbose)
+        if (!_silentOutput)
             AnsiConsole.MarkupLine(AoCMessages.InfoCreatingProblemFile(filePath));
         
         await File.WriteAllTextAsync(filePath, fileContent, Encoding.UTF8);

@@ -8,7 +8,7 @@ internal interface IEnvironmentVariablesService
     string SessionCookie { get; }
     string GitDefaultBranch { get; }
     bool NoGit { get; }
-    bool VerboseOutput { get; }
+    bool SilentOutput { get; }
     bool TrySetVariable(EnvironmentVariables key, string? value);
 }
 
@@ -33,17 +33,17 @@ internal class EnvironmentVariablesService : IEnvironmentVariablesService
         set => TrySetVariable(EnvironmentVariables.NoGit, value.ToString());
     }
     
-    public bool VerboseOutput
+    public bool SilentOutput
     {
-        get => bool.TryParse(GetVariable(EnvironmentVariables.VerboseOutput), out var verbose) && verbose;
-        set => TrySetVariable(EnvironmentVariables.VerboseOutput, value.ToString());
+        get => bool.TryParse(GetVariable(EnvironmentVariables.SilentOutput), out var verbose) && verbose;
+        set => TrySetVariable(EnvironmentVariables.SilentOutput, value.ToString());
     }
     
     private static readonly Dictionary<EnvironmentVariables, string> EnvironmentVariableKeys = new() {
         { EnvironmentVariables.SessionCookie, "AOC_SESSION_COOKIE" },
         { EnvironmentVariables.GitDefaultBranch, "AOC_GIT_DEFAULT_BRANCH" },
         { EnvironmentVariables.NoGit, "AOC_NO_GIT" },
-        { EnvironmentVariables.VerboseOutput, "AOC_VERBOSE_OUTPUT" }
+        { EnvironmentVariables.SilentOutput, "AOC_SILENT_OUTPUT" }
     };
 
     private const EnvironmentVariableTarget Target = EnvironmentVariableTarget.User;

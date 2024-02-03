@@ -5,5 +5,5 @@ public enum EnvironmentVariables
     SessionCookie,
     GitDefaultBranch,
     NoGit,
-    VerboseOutput
+    SilentOutput
 }
