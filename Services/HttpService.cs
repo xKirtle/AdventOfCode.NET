@@ -21,15 +21,18 @@ internal class HttpService : IHttpService
 {
     private readonly HttpClient _client;
     private readonly Uri _aocBaseAddress;
+    private readonly bool _verbose;
 
-    public HttpService() {
+    public HttpService(IEnvironmentVariablesService envVariablesService) {
+        _verbose = envVariablesService.VerboseOutput;
         _aocBaseAddress = new Uri("https://adventofcode.com");
+        
         var handler = new HttpClientHandler {
             CookieContainer = new CookieContainer()
         };
 
         _client = new HttpClient(handler);
-        var aocSessionToken = GetSessionCookie();
+        var aocSessionToken = envVariablesService.SessionCookie;
 
         handler.CookieContainer.Add(_aocBaseAddress, new Cookie("session", aocSessionToken));
     }
@@ -88,18 +91,11 @@ internal class HttpService : IHttpService
         return htmlDoc.DocumentNode;
     }
 
-    private static string GetSessionCookie() {
-        var sessionCookie = Environment.GetEnvironmentVariable("AOC_SESSION_COOKIE", EnvironmentVariableTarget.User);
-
-        if (string.IsNullOrEmpty(sessionCookie))
-            throw new AoCException(AoCMessages.ErrorSessionTokenNotFound);
-
-        return sessionCookie;
-    }
-
     private async Task<string> FetchContentAsync(string relativeUri) {
         var requestUri = new Uri(_aocBaseAddress, relativeUri);
-        AnsiConsole.MarkupLine(AoCMessages.InfoFetchingContent(requestUri.ToString()));
+        
+        if (_verbose)
+            AnsiConsole.MarkupLine(AoCMessages.InfoFetchingContent(requestUri.ToString()));
 
         HttpResponseMessage? response = null;
 

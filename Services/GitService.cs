@@ -49,11 +49,6 @@ internal class GitService(IEnvironmentVariablesService envVariablesService) : IG
         var branchName = GetBranchNameOfProblem(year, day);
         return repository.Head.FriendlyName.Equals(branchName, StringComparison.OrdinalIgnoreCase);
     }
-
-    public void StageAndCommitNewProblem(IRepository repository, int year, int day, Branch branch) {
-        var commitMessage = AoCMessages.InfoInitialGitCommitMessage(year, day);
-        InternalStageAndCommitProblem(repository, year, day, branch, commitMessage);
-    }
     
     public void StageProblemFiles(IRepository repository, int year, int day) {
         LibGit2Sharp.Commands.Stage(repository, ProblemService.GetProblemDirectory(year, day));
@@ -118,25 +113,8 @@ internal class GitService(IEnvironmentVariablesService envVariablesService) : IG
         return $"problem/Y{year}/Day{day:00}";
     }
 
-    private void InternalStageAndCommitProblem(IRepository repository, int year, int day, Branch branch, string commitMessage) {
-        LibGit2Sharp.Commands.Stage(repository, ProblemService.GetProblemDirectory(year, day));
-        var signature = repository.Config.BuildSignature(DateTimeOffset.Now);
-
-        if (signature == null) {
-            TryDeleteGitBranch(repository, branch);
-            throw new AoCException(AoCMessages.ErrorGitAuthorNotFound);
-        }
-
-        repository.Commit(commitMessage, signature, signature);
-    }
-
-    private string GetGitDefaultBranchName() {
-        var defaultBranch = envVariablesService.GetVariable(EnvironmentVariables.GitDefaultBranch);
-        return !string.IsNullOrEmpty(defaultBranch) ? defaultBranch : "master";
-    }
-
     private Branch GetGitDefaultBranch(IRepository repository) {
-        var defaultBranchName = GetGitDefaultBranchName();
+        var defaultBranchName = envVariablesService.GitDefaultBranch;
         var defaultBranch = repository.Branches[defaultBranchName];
 
         if (defaultBranch == null)

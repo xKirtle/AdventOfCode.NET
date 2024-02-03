@@ -1,28 +1,29 @@
-﻿using AdventOfCode.NET.Model;
+﻿using AdventOfCode.NET.Exceptions;
+using AdventOfCode.NET.Model;
 
 namespace AdventOfCode.NET.Services;
 
 internal interface IEnvironmentVariablesService
 {
-    string? SessionCookie { get; set; }
-    string? GitDefaultBranch { get; set; }
-    bool NoGit { get; set; }
-    bool VerboseOutput { get; set; }
+    string SessionCookie { get; }
+    string GitDefaultBranch { get; }
+    bool NoGit { get; }
+    bool VerboseOutput { get; }
     bool TrySetVariable(EnvironmentVariables key, string? value);
-    string? GetVariable(EnvironmentVariables key);
 }
 
 internal class EnvironmentVariablesService : IEnvironmentVariablesService
 {
-    public string? SessionCookie
+    public string SessionCookie
     {
-        get => GetVariable(EnvironmentVariables.SessionCookie);
+        get => GetVariable(EnvironmentVariables.SessionCookie) ??
+               throw new AoCException(AoCMessages.ErrorSessionTokenNotFound);
         set => TrySetVariable(EnvironmentVariables.SessionCookie, value);
     }
     
-    public string? GitDefaultBranch
+    public string GitDefaultBranch
     {
-        get => GetVariable(EnvironmentVariables.GitDefaultBranch);
+        get => GetVariable(EnvironmentVariables.GitDefaultBranch) ?? "master";
         set => TrySetVariable(EnvironmentVariables.GitDefaultBranch, value);
     }
     
@@ -61,7 +62,7 @@ internal class EnvironmentVariablesService : IEnvironmentVariablesService
         return true;
     }
 
-    public string? GetVariable(EnvironmentVariables key) {
+    private static string? GetVariable(EnvironmentVariables key) {
         var keyName = EnvironmentVariableKeys[key];
         return Environment.GetEnvironmentVariable(keyName, Target);
     }
