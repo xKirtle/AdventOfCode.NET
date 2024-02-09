@@ -28,7 +28,7 @@ public static class Startup
         switch (ex) {
             case AoCSolutionException:
                 throw ex;
-            case AoCException or CommandRuntimeException:
+            case AoCException:
                 AnsiConsole.MarkupLine(ex.Message);
                 break;
             default: {
