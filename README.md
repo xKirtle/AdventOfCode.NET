@@ -68,3 +68,27 @@ This will create a folder for that day that includes a `README.md` with the prob
 Attempt to solve a problem's solution. Before submitting an answer to Advent of Code servers, local tests will be ran (if any is defined).
 - `<date>`
   - Date must be in `YYYY/DD` format. For example, `2015/03`.
+
+## How to debug your code
+
+Since this library is designed to be used through a CLI, you'll have to modify your IDE's run configuration to pass the required arguments to the application. 
+
+For example, in JetBrains Rider, you can set up a run configuration and set the arguments in the `Run/Debug Configurations` window.
+
+<img src="https://i.imgur.com/n3YTf92.png" alt="asd"/>
+
+Alternatively, you can create a `launchSettings.json` file for your project and set the arguments there. This file should look like this:
+
+```json
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "YourProjectName": {
+      "commandName": "Project",
+      "commandLineArgs": "solve 2024/01"
+      // ...
+    }
+  }
+}
+
+```

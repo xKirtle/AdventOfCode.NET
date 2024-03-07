@@ -11,11 +11,13 @@ namespace AdventOfCode.NET.Utils;
 public static class AoCExtensions
 {
     public static IServiceCollection AddAdventOfCodeServices(this IServiceCollection services) {
+        // Application is short-lived (one operation per startup), so we can use AddSingleton for everything
         services.AddSingleton<IEnvironmentVariablesService, EnvironmentVariablesService>();
         services.AddSingleton<IGitService, GitService>();
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IProblemService, ProblemService>();
         services.AddSingleton<ISolverService, SolverService>();
+        services.AddSingleton<IBenchmarkService, BenchmarkService>();
 
         return services;
     }
